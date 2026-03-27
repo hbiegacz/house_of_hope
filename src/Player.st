@@ -11,7 +11,6 @@ Entity subclass: Player [
     ]
 
     initPlayer [
-        "Default stats according to OPIS_GRY.md (starts at 10)"
         stats := Dictionary new.
         stats at: 'strength' put: 10.
         stats at: 'dexterity' put: 10.
@@ -22,7 +21,6 @@ Entity subclass: Player [
         inventory := OrderedCollection new.
         companions := OrderedCollection new.
         
-        "Starting life is usually linked to endurance or fixed"
         self hp: 30; maxHp: 30.
     ]
 
@@ -42,6 +40,14 @@ Entity subclass: Player [
         ^item
     ]
 
+    displayStats [
+        Transcript show: '--- STATYSTYKI ---'; cr.
+        stats keysAndValuesDo: [ :name :val | 
+            Transcript show: name, ': ', val printString, ' (mod: ', (self calculateModifier: name) printString, ')'; cr.
+        ].
+        Transcript cr.
+    ]
+
     "Calculate modifier: (Stat - 10) + item_bonuses + companion_bonuses"
     calculateModifier: statName [
         | base mod |
@@ -56,8 +62,7 @@ Entity subclass: Player [
 
     useItem: anItem [
         "Logic for consuming items"
-        (anItem isKindOf: Consumable) ifTrue: [
-            anItem applyTo: self.
+        (anItem isKindOf: Item) ifTrue: [
             inventory remove: anItem.
         ]
     ]
