@@ -52,7 +52,7 @@ Object subclass: Game [
         
         "Initialize Core components"
         player := Player new.
-        world := World current. "Używamy instancji Singletona"
+        world := World current.
         world player: player.
     ]
 
@@ -122,44 +122,82 @@ Object subclass: Game [
         ^true
     ]
 
+    "Process examining items"
+    handleExamine: command [
+        | parts itemName item result |
+        parts := command subStrings: ' '.
+        parts size < 2 ifTrue: [ Transcript show: 'Co chcesz zbadac? (np. examine item)'; cr. ^false ].
+        itemName := parts at: 2.
+        
+        item := player findItemNamed: itemName.
+        item ifNil: [ item := world currentRoom findItemNamed: itemName ].
+        
+        item ifNil: [ Transcript show: 'Nie widzisz tu przedmiotu: ', itemName; cr. ^false ].
+        
+        Transcript show: 'Badanie przedmiotu: ', item name; cr.
+        Transcript show: item description; cr.
+        
+        "Intelligence check for hint (DC 12)"
+        result := player rollCheck: 'intelligence' against: 12.
+        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
+            Transcript show: 'UDAŁO SIĘ! Znalazłeś ukrytą wskazówkę: '; cr.
+            Transcript show: '>> ', item hint; cr.
+        ] ifFalse: [
+            Transcript show: 'Nie dostrzegasz niczego niezwyklego.'; cr.
+        ].
+        ^true
+    ]
+
+    "Process using items"
+    handleUse: command [
+        | parts itemName item |
+        parts := command subStrings: ' '.
+        parts size < 2 ifTrue: [ Transcript show: 'Co chcesz uzyc? (np. use item)'; cr. ^false ].
+        itemName := parts at: 2.
+        
+        item := player findItemNamed: itemName.
+        item ifNil: [ Transcript show: 'Nie masz w ekwipunku przedmiotu: ', itemName; cr. ^false ].
+        
+        "Specific logic for Incantation"
+        (item name sameAs: 'Incantation') ifTrue: [
+            (world currentRoom name = 'Banquet Hall') ifTrue: [
+                Transcript show: 'Wypowiadasz inkantacje ze zwoju. Powietrze drzy, a bariera na polnoc Rozpływa się w blasku ognia!'; cr.
+                GameState current barrierOpen: true.
+                player inventory remove: item.
+                ^true
+            ] ifFalse: [ 
+                Transcript show: 'Czytasz inkantację, ale tutaj nic się nie dzieje.'; cr. 
+                ^false
+            ]
+        ].
+        
+        Transcript show: 'Nie wiesz, jak uzyc przedmiotu: ', itemName; cr.
+        ^true
+    ]
+
     "Run the game."
     run [
         | cmd isUnknown |
 
         self printIntroduction.
         self printInstructions.
-        
-        "Initial room description"
         world look.
 
         "Game loop."
         [isGameOver] whileFalse: [
-
-            isUnknown := true.
             cmd := self readCommand.
+            
+            (cmd isNil) ifTrue: [ ^self ]. "Wsteczne zakończenie"
+            
+            isUnknown := true.
 
-            (cmd isNil) ifTrue: [ isGameOver := true. isUnknown := false ].
-
-            (isUnknown and: [cmd = 'instructions']) ifTrue: [
-                self printInstructions.
-                isUnknown := false
-            ].
-
-            (isUnknown and: [cmd = 'quit']) ifTrue: [
-                isGameOver := true.
-                isUnknown := false
-            ].
-
-            (isUnknown and: [cmd = 'halt']) ifTrue: [
-                self halt.
-                isUnknown := false
-            ].
-
-            (isUnknown and: [cmd = 'look']) ifTrue: [
-                world look.
-                isUnknown := false
-            ].
-
+            "Check commands"
+            (cmd = 'instructions') ifTrue: [ self printInstructions. isUnknown := false ].
+            (isUnknown and: [cmd = 'quit']) ifTrue: [ isGameOver := true. isUnknown := false ].
+            (isUnknown and: [cmd = 'halt']) ifTrue: [ self halt. isUnknown := false ].
+            (isUnknown and: [cmd = 'look']) ifTrue: [ world look. isUnknown := false ].
+            (isUnknown and: [cmd = 'stats']) ifTrue: [ player displayStats. isUnknown := false ].
+            
             (isUnknown and: [cmd = 'inventory']) ifTrue: [
                 Transcript show: 'Ekwipunek: '.
                 player inventory isEmpty 
@@ -169,28 +207,16 @@ Object subclass: Game [
                 isUnknown := false
             ].
 
-            (isUnknown and: [cmd isNil not and: [cmd startsWith: 'go ']]) ifTrue: [
-                self handleMove: cmd.
-                isUnknown := false
-            ].
-            
-            (isUnknown and: [self isDirection: cmd]) ifTrue: [
-                self handleMove: cmd.
-                isUnknown := false
-            ].
-
-            (isUnknown and: [cmd isNil not and: [cmd startsWith: 'take ']]) ifTrue: [
-                self handleTake: cmd.
-                isUnknown := false
-            ].
-
-            (isUnknown and: [cmd isNil not and: [cmd startsWith: 'drop ']]) ifTrue: [
-                self handleDrop: cmd.
-                isUnknown := false
-            ].
+            (isUnknown and: [cmd startsWith: 'go ']) ifTrue: [ self handleMove: cmd. isUnknown := false ].
+            (isUnknown and: [self isDirection: cmd]) ifTrue: [ self handleMove: cmd. isUnknown := false ].
+            (isUnknown and: [cmd startsWith: 'take ']) ifTrue: [ self handleTake: cmd. isUnknown := false ].
+            (isUnknown and: [cmd startsWith: 'drop ']) ifTrue: [ self handleDrop: cmd. isUnknown := false ].
+            (isUnknown and: [cmd startsWith: 'examine ']) ifTrue: [ self handleExamine: cmd. isUnknown := false ].
+            (isUnknown and: [cmd startsWith: 'use ']) ifTrue: [ self handleUse: cmd. isUnknown := false ].
                 
             isUnknown ifTrue: [
-                self printLines: #('Nieznana komenda.' 'Dostepne kierunki: go north/south/east/west (lub tylko: north, etc.)' 'Akcje: take <item>, drop <item>, inventory, look, instructions, quit')
+                Transcript show: 'Nieznana komenda.'; cr.
+                Transcript show: 'Nawigacja: go north, Akcje: take, drop, examine, use, inventory, stats, look'; cr.
             ]
         ]
     ]

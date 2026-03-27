@@ -47,8 +47,6 @@ Entity subclass: Player [
         | base mod |
         base := stats at: statName ifAbsent: [ 10 ].
         mod := (base - 10).
-        
-        "TODO: Add bonuses from companions and items in future steps"
         ^mod
     ]
 

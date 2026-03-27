@@ -3,10 +3,13 @@
 Object subclass: World [
     | rooms currentRoom player |
 
+    World class [
+        | currentInstance |
+    ]
+
     World class >> current [
-        | instance |
-        instance ifNil: [ instance := self new. instance initWorld ].
-        ^instance
+        currentInstance ifNil: [ currentInstance := self new. currentInstance initWorld ].
+        ^currentInstance
     ]
 
     initWorld [
@@ -31,7 +34,8 @@ Object subclass: World [
         garden := Room name: 'Garden' description: 'Ogród pełen egzotycznych roślin. Na środku stoi Sphinx.'.
 
         "Items from OPIS_GRY.md Section 6"
-        banquet addItem: (Item name: 'Incantation' description: 'Starożytny zwój pism potrzebny do otwarcia Skarbca.').
+        banquet addItem: ((Item name: 'Incantation' description: 'Starozytny zwoj pism potrzebny do otwarcia Skarbca.') 
+            hint: 'Ten wysokiej jakosci zwoj reaguje na magie. Moze otworzyc przejscie do Skarbca.').
         
         "Set neighbors / Map graph"
         foyer addNeighbor: banquet direction: 'north'.
@@ -70,9 +74,10 @@ Object subclass: World [
 
         "Check for barriers (Logika z OPIS_GRY.md sections 3/4)"
         (currentRoom name = 'Banquet Hall' and: [ aDirection = 'north' ]) ifTrue: [
-            "Simplified check for now, can be expanded with GameState"
-            Transcript show: 'Bariera magiczna blokuje wejście do Skarbca! (Wymaga incantation)'; cr.
-            ^false
+            (GameState current barrierOpen) ifFalse: [
+                Transcript show: 'Bariera magiczna (półprzezroczysta ściana ognia) blokuje wejście do Skarbca! (Wymaga incantation)'; cr.
+                ^false
+            ].
         ].
 
         currentRoom := nextRoom.
