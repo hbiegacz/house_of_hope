@@ -14,7 +14,7 @@ Object subclass: Room [
         neighbors := Dictionary new.
         items := Set new.
         npcs := OrderedCollection new.
-        enemies := OrderedCollection new.
+        enemies := Set new.
     ]
 
     findItemNamed: aString [

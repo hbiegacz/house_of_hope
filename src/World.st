@@ -37,6 +37,9 @@ Object subclass: World [
         banquet addItem: ((Item name: 'Incantation' description: 'Starozytny zwoj pism potrzebny do otwarcia Skarbca.') 
             hint: 'Ten wysokiej jakosci zwoj reaguje na magie. Moze otworzyc przejscie do Skarbca.').
         
+        "Enemies from OPIS_GRY.md Section 6"
+        garden enemies add: (Enemy name: 'Imp' hp: 15 maxHp: 15 ac: 12 dc: 10 description: 'Maly, czerwony diabel z widlami.').
+        
         "Set neighbors / Map graph"
         foyer addNeighbor: banquet direction: 'north'.
         foyer addNeighbor: prison direction: 'south'.

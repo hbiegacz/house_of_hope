@@ -12,31 +12,26 @@ Collaborators:
 * World, Player"
 
 Object subclass: Game [
-    | isGameOver player world |
+    | isGameOver player world activeEnemy |
 
     introductionText := #(
         'House of Hope - Prolog'
         ''
-        'Mapa jest grafem polaczonych pokoi:'
-        '- Foyer: Centralny punkt.'
-        '- Banquet Hall: Na polnoc od Foyer. Zawiera jedzenie/mikstury.'
-        '- Vault: Na polnoc od Banquet Hall. Chroniony bariera (wymaga przedmiotu incantation).'
-        '- Prison: Na poludnie od Foyer. Chroniony krata (wymaga testu strength lub dexterity).'
-        '- Garden: Na wschod od Banquet Hall. Zawiera Sphinx i Cambiona.'
-        '- Secret Tunnel: Laczy Vault z Garden (wymaga rusty_key).'
-        '- Kitchen / Servant Quarters / Boudoir: Lokacje poboczne z przedmiotami i NPC.'
+        '--- ARCHITEKTURA SWIATA ---'
+        'Foyer -> Banquet Hall -> Vault'
+        '       |             |-> Garden'
+        '       |-> Prison'
         ''
     ).
 
     instructionsText := #(
         'Available commands are:'
         ''
-        'go north/south/east/west -- Ruch pomiedzy lokacjami.'
-        'look                     -- Opis aktualnego pokoju.'
-        'inventory                -- Twoje przedmioty.'
-        'instructions             -- Wyswietl instrukcje.'
-        'quit                     -- Koniec gry.'
-        'halt                     -- Debugger (halt).'
+        'Nawigacja: go north, look'
+        'Przedmioty: take, drop, examine, use, inventory'
+        'Postac: stats'
+        'Walka (tylko w starciu): attack, flee'
+        'Systemowe: quit, halt'
         ''
     ).
  
@@ -54,6 +49,7 @@ Object subclass: Game [
         player := Player new.
         world := World current.
         world player: player.
+        activeEnemy := nil.
     ]
 
     "Print strings from array in separate lines."
@@ -70,20 +66,87 @@ Object subclass: Game [
     ]
 
     readCommand [
-        Transcript show: '> '.
+        Transcript show: (activeEnemy ifNil: [ '> ' ] ifNotNil: [ '[WALKA] > ' ]).
         ^ FileStream stdin nextLine
+    ]
+
+    "Combat Logic"
+    enterCombat: aRoom [
+        aRoom enemies isEmpty ifFalse: [
+            activeEnemy := aRoom enemies asArray first.
+            Transcript show: '!!! UWAGA !!! Z zostajesz zaatakowany przez: ', activeEnemy name; cr.
+            Transcript show: activeEnemy description; cr.
+            Transcript show: 'Uzyj: attack lub flee'; cr.
+        ]
+    ]
+
+    handleEnemyTurn [
+        | roll ac total dmg |
+        activeEnemy ifNil: [ ^self ].
+        
+        roll := DiceRoller current d20.
+        ac := 12 + (player calculateModifier: 'dexterity'). "Sekcja 2.A: AC=12+dex_mod"
+        
+        Transcript show: activeEnemy name, ' atakuje! (Rzut: ', roll printString, ' vs AC ', ac printString, ')'; cr.
+        
+        (roll >= ac) ifTrue: [
+            dmg := DiceRoller current roll: 6. "Przeciwnik zadaje 1-6 dmg"
+            player takeDamage: dmg.
+            Transcript show: 'Zostajesz ranny! Otrzymujesz ', dmg printString, ' obrażeń (HP: ', player hp printString, ')'; cr.
+            (player isAlive) ifFalse: [
+                Transcript show: 'ZGINALES... House of Hope pochłonęło Twoją duszę.'; cr.
+                isGameOver := true.
+            ]
+        ] ifFalse: [
+            Transcript show: 'Uniknąłeś ataku!'; cr.
+        ].
+    ]
+
+    handleAttack [
+        | result roll damage |
+        activeEnemy ifNil: [ Transcript show: 'Nie masz kogo zaatakować.'; cr. ^false ].
+        
+        "Sekcja 2.A: d20 + mod >= AC"
+        result := player rollCheck: 'strength' against: activeEnemy armorClass.
+        
+        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
+            damage := DiceRoller current roll: 8. "Dmg 1-8"
+            (result = #criticalSuccess) ifTrue: [ damage := damage * 2 ].
+            
+            activeEnemy takeDamage: damage.
+            Transcript show: 'Trafiasz! Zadajesz ', damage printString, ' obrażeń (Wróg HP: ', activeEnemy hp printString, ')'; cr.
+            
+            (activeEnemy isAlive) ifFalse: [
+                Transcript show: 'PRZECIWNIK POKONANY!'; cr.
+                world currentRoom enemies remove: activeEnemy.
+                activeEnemy := nil.
+                ^true
+            ].
+        ] ifFalse: [
+            Transcript show: 'Chybiłeś!'; cr.
+        ].
+        
+        self handleEnemyTurn.
+        ^true
+    ]
+
+    handleFlee [
+        Transcript show: 'Uciekasz w popłochu!'; cr.
+        activeEnemy := nil.
+        world moveTo: 'south'. "Safe direction"
+        ^true
     ]
 
     "Process movements"
     handleMove: command [
         | parts direction |
         parts := command subStrings: ' '.
-        
-        "Support both 'go north' and just 'north'"
         (parts size = 1) ifTrue: [ direction := parts at: 1 ].
         (parts size >= 2) ifTrue: [ direction := parts at: 2 ].
         
-        world moveTo: direction.
+        (world moveTo: direction) ifTrue: [
+            self enterCombat: world currentRoom.
+        ].
         ^true
     ]
     
@@ -95,12 +158,10 @@ Object subclass: Game [
     handleTake: command [
         | parts itemName item |
         parts := command subStrings: ' '.
-        parts size < 2 ifTrue: [ Transcript show: 'Co chcesz podniesc? (np. take item)'; cr. ^false ].
+        parts size < 2 ifTrue: [ Transcript show: 'Co chcesz podniesc?'; cr. ^false ].
         itemName := parts at: 2.
-        
         item := world currentRoom findItemNamed: itemName.
-        item ifNil: [ Transcript show: 'Nie widzisz tu przedmiotu: ', itemName; cr. ^false ].
-        
+        item ifNil: [ Transcript show: 'Nie widzisz tu: ', itemName; cr. ^false ].
         world currentRoom removeItem: item.
         player takeItem: item.
         Transcript show: 'Podniosles: ', itemName; cr.
@@ -111,14 +172,11 @@ Object subclass: Game [
     handleDrop: command [
         | parts itemName item |
         parts := command subStrings: ' '.
-        parts size < 2 ifTrue: [ Transcript show: 'Co chcesz upuscic? (np. drop item)'; cr. ^false ].
+        parts size < 2 ifTrue: [ Transcript show: 'Co chcesz upuscic?'; cr. ^false ].
         itemName := parts at: 2.
-        
         item := player dropItem: itemName.
-        item ifNil: [ Transcript show: 'Nie masz w ekwipunku przedmiotu: ', itemName; cr. ^false ].
-        
-        world currentRoom addItem: item.
-        Transcript show: 'Upusciles: ', itemName; cr.
+        item ifNil: [ Transcript show: 'Nie masz tego.'; cr. ^false ].
+        world currentRoom addItem: item. Transcript show: 'Upusciles: ', itemName; cr.
         ^true
     ]
 
@@ -126,24 +184,17 @@ Object subclass: Game [
     handleExamine: command [
         | parts itemName item result |
         parts := command subStrings: ' '.
-        parts size < 2 ifTrue: [ Transcript show: 'Co chcesz zbadac? (np. examine item)'; cr. ^false ].
+        parts size < 2 ifTrue: [ Transcript show: 'Co zbadac?'; cr. ^false ].
         itemName := parts at: 2.
         
         item := player findItemNamed: itemName.
         item ifNil: [ item := world currentRoom findItemNamed: itemName ].
+        item ifNil: [ Transcript show: 'Nie widzisz produktu: ', itemName; cr. ^false ].
         
-        item ifNil: [ Transcript show: 'Nie widzisz tu przedmiotu: ', itemName; cr. ^false ].
-        
-        Transcript show: 'Badanie przedmiotu: ', item name; cr.
         Transcript show: item description; cr.
-        
-        "Intelligence check for hint (DC 12)"
         result := player rollCheck: 'intelligence' against: 12.
         (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
-            Transcript show: 'UDAŁO SIĘ! Znalazłeś ukrytą wskazówkę: '; cr.
             Transcript show: '>> ', item hint; cr.
-        ] ifFalse: [
-            Transcript show: 'Nie dostrzegasz niczego niezwyklego.'; cr.
         ].
         ^true
     ]
@@ -152,26 +203,18 @@ Object subclass: Game [
     handleUse: command [
         | parts itemName item |
         parts := command subStrings: ' '.
-        parts size < 2 ifTrue: [ Transcript show: 'Co chcesz uzyc? (np. use item)'; cr. ^false ].
+        parts size < 2 ifTrue: [ Transcript show: 'Co uzyc?'; cr. ^false ].
         itemName := parts at: 2.
-        
         item := player findItemNamed: itemName.
-        item ifNil: [ Transcript show: 'Nie masz w ekwipunku przedmiotu: ', itemName; cr. ^false ].
+        item ifNil: [ Transcript show: 'Nie masz tego.'; cr. ^false ].
         
-        "Specific logic for Incantation"
         (item name sameAs: 'Incantation') ifTrue: [
             (world currentRoom name = 'Banquet Hall') ifTrue: [
-                Transcript show: 'Wypowiadasz inkantacje ze zwoju. Powietrze drzy, a bariera na polnoc Rozpływa się w blasku ognia!'; cr.
+                Transcript show: 'Bariera znika!'; cr.
                 GameState current barrierOpen: true.
-                player inventory remove: item.
-                ^true
-            ] ifFalse: [ 
-                Transcript show: 'Czytasz inkantację, ale tutaj nic się nie dzieje.'; cr. 
-                ^false
+                player inventory remove: item. ^true
             ]
         ].
-        
-        Transcript show: 'Nie wiesz, jak uzyc przedmiotu: ', itemName; cr.
         ^true
     ]
 
@@ -186,38 +229,34 @@ Object subclass: Game [
         "Game loop."
         [isGameOver] whileFalse: [
             cmd := self readCommand.
-            
-            (cmd isNil) ifTrue: [ ^self ]. "Wsteczne zakończenie"
-            
+            (cmd isNil) ifTrue: [ ^self ].
             isUnknown := true.
 
-            "Check commands"
-            (cmd = 'instructions') ifTrue: [ self printInstructions. isUnknown := false ].
-            (isUnknown and: [cmd = 'quit']) ifTrue: [ isGameOver := true. isUnknown := false ].
-            (isUnknown and: [cmd = 'halt']) ifTrue: [ self halt. isUnknown := false ].
-            (isUnknown and: [cmd = 'look']) ifTrue: [ world look. isUnknown := false ].
-            (isUnknown and: [cmd = 'stats']) ifTrue: [ player displayStats. isUnknown := false ].
-            
-            (isUnknown and: [cmd = 'inventory']) ifTrue: [
-                Transcript show: 'Ekwipunek: '.
-                player inventory isEmpty 
-                    ifTrue: [ Transcript show: '(pusty)' ]
-                    ifFalse: [ player inventory do: [ :i | Transcript show: i name, ' ' ] ].
-                Transcript cr.
-                isUnknown := false
+            "Normal / Combat Dispatch"
+            activeEnemy ifNil: [
+                (cmd = 'instructions') ifTrue: [ self printInstructions. isUnknown := false ].
+                (isUnknown and: [cmd = 'quit']) ifTrue: [ isGameOver := true. isUnknown := false ].
+                (isUnknown and: [cmd = 'halt']) ifTrue: [ self halt. isUnknown := false ].
+                (isUnknown and: [cmd = 'look']) ifTrue: [ world look. isUnknown := false ].
+                (isUnknown and: [cmd = 'stats']) ifTrue: [ player displayStats. isUnknown := false ].
+                (isUnknown and: [cmd = 'inventory']) ifTrue: [
+                    Transcript show: 'Ekwipunek: '.
+                    player inventory do: [ :i | Transcript show: i name, ' ' ]. Transcript cr.
+                    isUnknown := false
+                ].
+                (isUnknown and: [cmd startsWith: 'go ']) ifTrue: [ self handleMove: cmd. isUnknown := false ].
+                (isUnknown and: [self isDirection: cmd]) ifTrue: [ self handleMove: cmd. isUnknown := false ].
+                (isUnknown and: [cmd startsWith: 'take ']) ifTrue: [ self handleTake: cmd. isUnknown := false ].
+                (isUnknown and: [cmd startsWith: 'drop ']) ifTrue: [ self handleDrop: cmd. isUnknown := false ].
+                (isUnknown and: [cmd startsWith: 'examine ']) ifTrue: [ self handleExamine: cmd. isUnknown := false ].
+                (isUnknown and: [cmd startsWith: 'use ']) ifTrue: [ self handleUse: cmd. isUnknown := false ].
+            ] ifNotNil: [
+                (cmd = 'attack') ifTrue: [ self handleAttack. isUnknown := false ].
+                (isUnknown and: [cmd = 'flee']) ifTrue: [ self handleFlee. isUnknown := false ].
+                (isUnknown and: [cmd = 'stats']) ifTrue: [ player displayStats. isUnknown := false ].
             ].
-
-            (isUnknown and: [cmd startsWith: 'go ']) ifTrue: [ self handleMove: cmd. isUnknown := false ].
-            (isUnknown and: [self isDirection: cmd]) ifTrue: [ self handleMove: cmd. isUnknown := false ].
-            (isUnknown and: [cmd startsWith: 'take ']) ifTrue: [ self handleTake: cmd. isUnknown := false ].
-            (isUnknown and: [cmd startsWith: 'drop ']) ifTrue: [ self handleDrop: cmd. isUnknown := false ].
-            (isUnknown and: [cmd startsWith: 'examine ']) ifTrue: [ self handleExamine: cmd. isUnknown := false ].
-            (isUnknown and: [cmd startsWith: 'use ']) ifTrue: [ self handleUse: cmd. isUnknown := false ].
                 
-            isUnknown ifTrue: [
-                Transcript show: 'Nieznana komenda.'; cr.
-                Transcript show: 'Nawigacja: go north, Akcje: take, drop, examine, use, inventory, stats, look'; cr.
-            ]
+            isUnknown ifTrue: [ Transcript show: 'Nieznana komenda.'; cr ].
         ]
     ]
 ]
