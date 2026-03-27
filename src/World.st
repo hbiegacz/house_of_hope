@@ -47,10 +47,6 @@ Object subclass: World [
         
         banquet addItem: (Item name: 'Potion' description: 'Czerwony płyn w szklanej buteleczce. Pachnie ziołami (+10 HP).').
         
-        player companions add: (Companion name: 'Astarion' stat: 'dexterity' value: 5).
-        player companions add: (Companion name: 'Gale' stat: 'intelligence' value: 4).
-        player companions add: (Companion name: 'Shadowheart' stat: 'endurance' value: 4).
-        
         foyer addNeighbor: banquet direction: 'north'.
         foyer addNeighbor: prison direction: 'south'.
         
@@ -71,6 +67,14 @@ Object subclass: World [
         rooms at: 'Garden' put: garden.
         
         currentRoom := foyer.
+    ]
+
+    setupPlayerCompanions [
+        player ifNotNil: [
+            player companions add: (Companion name: 'Astarion' stat: 'dexterity' value: 5).
+            player companions add: (Companion name: 'Gale' stat: 'intelligence' value: 4).
+            player companions add: (Companion name: 'Shadowheart' stat: 'endurance' value: 4).
+        ]
     ]
     
     moveTo: aDirection [

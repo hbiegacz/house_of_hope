@@ -12,28 +12,7 @@ Collaborators:
 * World, Player"
 
 Object subclass: Game [
-    | isGameOver player world activeEnemy |
-
-    introductionText := #(
-        'House of Hope - Prolog'
-        ''
-        '--- ARCHITEKTURA SWIATA ---'
-        'Foyer -> Banquet Hall -> Vault'
-        '       |             |-> Garden'
-        '       |-> Prison'
-        ''
-    ).
-
-    instructionsText := #(
-        'Available commands are:'
-        ''
-        'Nawigacja: go north, look'
-        'Przedmioty: take, drop, examine, use, inventory'
-        'Postac: stats'
-        'Walka (tylko w starciu): attack, flee'
-        'Systemowe: quit, halt'
-        ''
-    ).
+    | isGameOver player world activeEnemy introductionText instructionsText |
  
     Game class >> new [
         | g |
@@ -45,10 +24,32 @@ Object subclass: Game [
     init [
         isGameOver := false.
         
+        introductionText := #(
+            'House of Hope - Prolog'
+            ''
+            '--- ARCHITEKTURA SWIATA ---'
+            'Foyer -> Banquet Hall -> Vault'
+            '       |             |-> Garden'
+            '       |-> Prison'
+            ''
+        ).
+
+        instructionsText := #(
+            'Available commands are:'
+            ''
+            'Nawigacja: go north, look'
+            'Przedmioty: take, drop, examine, use, inventory'
+            'Postac: stats'
+            'Walka (tylko w starciu): attack, flee'
+            'Systemowe: quit, halt'
+            ''
+        ).
+
         "Initialize Core components"
         player := Player new.
         world := World current.
         world player: player.
+        world setupPlayerCompanions.
         activeEnemy := nil.
     ]
 
