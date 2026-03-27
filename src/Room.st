@@ -27,6 +27,8 @@ Object subclass: Room [
     description [ ^description ]
     description: aString [ description := aString ]
 
+    neighbors [ ^neighbors ]
+    items [ ^items ]
     npcs [ ^npcs ]
     enemies [ ^enemies ]
 
