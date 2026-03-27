@@ -66,13 +66,22 @@ Entity subclass: Player [
     
     rollCheck: aStatName against: manualDC [
         | roll modifier total |
-        roll := (1 to: 20) atRandom.
+        roll := DiceRoller current d20.
         modifier := self calculateModifier: aStatName.
         total := roll + modifier.
         
-        Transcript show: 'Dice roll for ', aStatName, ': ', roll printString, ' + ', modifier printString, ' = ', total printString; cr.
+        Transcript show: 'Rzut kością (', aStatName, ' DC ', manualDC printString, '): ', roll printString, ' + ', modifier printString, ' = ', total printString; cr.
 
-        roll = 20 ifTrue: [ ^ #criticalSuccess ].
-        total >= manualDC ifTrue: [ ^ #success ] ifFalse: [ ^ #failure ].
+        roll = 20 ifTrue: [ 
+            Transcript show: 'SUKCES KRYTYCZNY!'; cr.
+            ^ #criticalSuccess 
+        ].
+        total >= manualDC ifTrue: [ 
+            Transcript show: 'Sukces!'; cr.
+            ^ #success 
+        ] ifFalse: [ 
+            Transcript show: 'Porażka...'; cr.
+            ^ #failure 
+        ].
     ]
 ]
