@@ -208,12 +208,62 @@ Object subclass: Game [
         item := player findItemNamed: itemName.
         item ifNil: [ Transcript show: 'Nie masz tego.'; cr. ^false ].
         
+        "Incantation: opens Vault barrier"
         (item name sameAs: 'Incantation') ifTrue: [
             (world currentRoom name = 'Banquet Hall') ifTrue: [
-                Transcript show: 'Bariera znika!'; cr.
+                Transcript show: 'Bariera magiczna znika w blaskach ognia!'; cr.
                 GameState current barrierOpen: true.
                 player inventory remove: item. ^true
+            ] ifFalse: [
+                Transcript show: 'Tutaj inkantacja nie ma efektu.'; cr. ^false
             ]
+        ].
+
+        "Potion: restores 10 HP (Sekcja 1.C)"
+        (item name sameAs: 'Potion') ifTrue: [
+            player heal: 10.
+            player inventory remove: item.
+            Transcript show: 'Wypiłeś miksture! +10 HP. Obecne HP: ', player hp printString; cr.
+            ^true
+        ].
+        
+        Transcript show: 'Nie wiesz jak uzyc: ', itemName; cr.
+        ^true
+    ]
+
+    "Process talking to NPCs - includes Sphinx riddle (Sekcja 7)"
+    handleTalk: command [
+        | parts npcName npc answer |
+        parts := command subStrings: ' '.
+        parts size < 2 ifTrue: [ Transcript show: 'Z kim porozmawiasz? (np. talk sphinx)'; cr. ^false ].
+        npcName := parts at: 2.
+        
+        npc := world currentRoom findNpcNamed: npcName.
+        npc ifNil: [ Transcript show: 'Nie ma tu nikogo o imieniu: ', npcName; cr. ^false ].
+        
+        Transcript show: npc name, ' mówi do ciebie: '; cr.
+        Transcript show: npc description; cr.
+        
+        "Check if NPC has a riddle"
+        npc riddle ifNotNil: [
+            Transcript show: '--- ZAGADKA ---'; cr.
+            Transcript show: npc riddle; cr.
+            Transcript show: 'Twoja odpowiedz: '.
+            answer := FileStream stdin nextLine.
+            
+            (answer sameAs: npc answer) ifTrue: [
+                Transcript show: 'POPRAWNA ODPOWIEDZ!'; cr.
+                Transcript show: 'Sphinx mowi: "Brawo! Oto moja wskazówka: uderz Orphic Hammer w kratach wiezienia, by uwolnic Hope."'; cr.
+                GameState current riddleSolved: true.
+            ] ifFalse: [
+                Transcript show: 'ZLA ODPOWIEDZ! Sphinx atakuje! -5 HP.'; cr.
+                player takeDamage: 5.
+                Transcript show: 'HP gracza: ', player hp printString; cr.
+                (player isAlive) ifFalse: [
+                    Transcript show: 'Zginales z rak Sphinksa.'; cr.
+                    isGameOver := true.
+                ]
+            ].
         ].
         ^true
     ]
@@ -239,17 +289,32 @@ Object subclass: Game [
                 (isUnknown and: [cmd = 'halt']) ifTrue: [ self halt. isUnknown := false ].
                 (isUnknown and: [cmd = 'look']) ifTrue: [ world look. isUnknown := false ].
                 (isUnknown and: [cmd = 'stats']) ifTrue: [ player displayStats. isUnknown := false ].
-                (isUnknown and: [cmd = 'inventory']) ifTrue: [
-                    Transcript show: 'Ekwipunek: '.
-                    player inventory do: [ :i | Transcript show: i name, ' ' ]. Transcript cr.
+
+                (isUnknown and: [cmd = 'companions']) ifTrue: [
+                    Transcript show: 'Twoja druzyna: '.
+                    player companions isEmpty
+                        ifTrue: [ Transcript show: '(brak)' ]
+                        ifFalse: [ player companions do: [ :c | Transcript show: c name, '(+', c bonusValue printString, ' ', c boostedStat, ') ' ] ].
+                    Transcript cr.
                     isUnknown := false
                 ].
+
+                (isUnknown and: [cmd = 'inventory']) ifTrue: [
+                    Transcript show: 'Ekwipunek: '.
+                    player inventory isEmpty
+                        ifTrue: [ Transcript show: '(pusty)' ]
+                        ifFalse: [ player inventory do: [ :i | Transcript show: i name, ' ' ] ].
+                    Transcript cr.
+                    isUnknown := false
+                ].
+
                 (isUnknown and: [cmd startsWith: 'go ']) ifTrue: [ self handleMove: cmd. isUnknown := false ].
                 (isUnknown and: [self isDirection: cmd]) ifTrue: [ self handleMove: cmd. isUnknown := false ].
                 (isUnknown and: [cmd startsWith: 'take ']) ifTrue: [ self handleTake: cmd. isUnknown := false ].
                 (isUnknown and: [cmd startsWith: 'drop ']) ifTrue: [ self handleDrop: cmd. isUnknown := false ].
                 (isUnknown and: [cmd startsWith: 'examine ']) ifTrue: [ self handleExamine: cmd. isUnknown := false ].
                 (isUnknown and: [cmd startsWith: 'use ']) ifTrue: [ self handleUse: cmd. isUnknown := false ].
+                (isUnknown and: [cmd startsWith: 'talk ']) ifTrue: [ self handleTalk: cmd. isUnknown := false ].
             ] ifNotNil: [
                 (cmd = 'attack') ifTrue: [ self handleAttack. isUnknown := false ].
                 (isUnknown and: [cmd = 'flee']) ifTrue: [ self handleFlee. isUnknown := false ].
