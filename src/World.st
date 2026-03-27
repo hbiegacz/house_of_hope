@@ -39,6 +39,21 @@ Object subclass: World [
         
         "Enemies from OPIS_GRY.md Section 6"
         garden enemies add: (Enemy name: 'Imp' hp: 15 maxHp: 15 ac: 12 dc: 10 description: 'Maly, czerwony diabel z widlami.').
+
+        "NPCs from OPIS_GRY.md Section 7"
+        | sphinx |
+        sphinx := NPC name: 'Sphinx' description: 'Majestatyczne stworzenie o ciele lwa i ludzkiej twarzy.'.
+        sphinx riddle: 'I can be broken without being touched. What am I?'.
+        sphinx answer: 'promise'.
+        garden addNpc: sphinx.
+
+        "Items / Consumables from OPIS_GRY.md Section 1.C"
+        banquet addItem: (Item name: 'Potion' description: 'Czerwony płyn w szklanej buteleczce. Pachnie ziołami (+10 HP).').
+        
+        "Companions - Section 6: Starting with 3 companions"
+        player companions add: (Companion name: 'Astarion' stat: 'dexterity' value: 5).
+        player companions add: (Companion name: 'Gale' stat: 'intelligence' value: 4).
+        player companions add: (Companion name: 'Shadowheart' stat: 'endurance' value: 4).
         
         "Set neighbors / Map graph"
         foyer addNeighbor: banquet direction: 'north'.

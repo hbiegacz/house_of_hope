@@ -53,6 +53,14 @@ Entity subclass: Player [
         | base mod |
         base := stats at: statName ifAbsent: [ 10 ].
         mod := (base - 10).
+        
+        "Bonusy od towarzyszy (Sekcja 2.A)"
+        companions do: [ :comp | 
+            (comp boostedStat sameAs: statName) ifTrue: [ 
+                mod := mod + comp bonusValue.
+            ]
+        ].
+        
         ^mod
     ]
 

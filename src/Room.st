@@ -27,10 +27,14 @@ Object subclass: Room [
     description [ ^description ]
     description: aString [ description := aString ]
 
-    neighbors [ ^neighbors ]
-    items [ ^items ]
     npcs [ ^npcs ]
     enemies [ ^enemies ]
+
+    addNpc: anNpc [ npcs add: anNpc ]
+    
+    findNpcNamed: aString [
+        ^npcs detect: [ :n | n name sameAs: aString ] ifNone: [ nil ]
+    ]
 
     addNeighbor: aRoom direction: aDirection [
         neighbors at: aDirection put: aRoom.

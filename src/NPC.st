@@ -1,0 +1,32 @@
+"NPC class - Characters to interact with."
+
+Object subclass: NPC [
+    | name description dialogue riddle answer |
+
+    NPC class >> name: aName description: aDescription [
+        | n |
+        n := self new.
+        n name: aName; description: aDescription; initNpc.
+        ^n
+    ]
+
+    initNpc [
+        dialogue := OrderedCollection new.
+    ]
+
+    name [ ^name ]
+    name: aString [ name := aString ]
+
+    description [ ^description ]
+    description: aString [ description := aString ]
+
+    riddle [ ^riddle ]
+    riddle: aString [ riddle := aString ]
+
+    answer [ ^answer ]
+    answer: aString [ answer := aString ]
+    
+    printOn: aStream [
+        aStream nextPutAll: name.
+    ]
+]
