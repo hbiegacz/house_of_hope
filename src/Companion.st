@@ -20,11 +20,13 @@ Object subclass: Companion [
     bonusValue: anInteger [ bonusValue := anInteger ]
     
     printOn: aStream [
+        | capitalizedStat |
+        capitalizedStat := (boostedStat at: 1) asUppercase asString, (boostedStat copyFrom: 2).
         aStream nextPutAll: name.
         aStream nextPutAll: ' (+'.
         aStream nextPutAll: bonusValue printString.
         aStream nextPutAll: ' '.
-        aStream nextPutAll: boostedStat.
+        aStream nextPutAll: capitalizedStat.
         aStream nextPutAll: ')'.
     ]
 ]

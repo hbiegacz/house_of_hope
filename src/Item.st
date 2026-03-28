@@ -6,7 +6,7 @@ Object subclass: Item [
     Item class >> name: aName description: aDescription [
         | i |
         i := self new.
-        i name: aName; description: aDescription.
+        i name: aName; description: aDescription; hint: ''.
         ^i
     ]
 

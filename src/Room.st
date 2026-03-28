@@ -55,12 +55,23 @@ Object subclass: Room [
     ]
 
     describe [
-        Transcript show: '---- ', name, ' ----'; cr.
-        Transcript show: description; cr.
-        Transcript show: 'Exits: ', neighbors keys asArray printString; cr.
-        items isEmpty ifFalse: [ Transcript show: 'Items: ', items asArray printString; cr ].
-        npcs isEmpty ifFalse: [ Transcript show: 'NPCs: ', npcs asArray printString; cr ].
-        enemies isEmpty ifFalse: [ Transcript show: 'Enemies! ', enemies asArray printString; cr ].
+        Transcript cr; show: 'Current position: ', name asLowercase; cr.
+        Transcript show: '--- LOCATION DESCRIPTION ---'; cr.
+        Transcript show: description; cr; cr.
+        
+        npcs do: [ :npc | 
+            Transcript show: '>> You see someone here: ', npc name asLowercase, '. You can "talk ', npc name asLowercase, '"'; cr.
+        ].
+        
+        items isEmpty ifFalse: [
+            Transcript show: '>> You found the following items:'; cr.
+            items do: [ :i | Transcript show: '- ', i name asLowercase, ': ', i description; cr ].
+            Transcript show: 'You can use "take ', (items asArray first name asLowercase), '" to pick them up.'; cr.
+        ].
+
+        Transcript cr.
+        Transcript show: 'Available Exits:'; cr.
+        neighbors keys do: [ :dir | Transcript show: '- ', dir; cr ].
         Transcript cr.
     ]
 ]

@@ -24,12 +24,22 @@ Entity subclass: Player [
         self hp: 30; maxHp: 30.
     ]
 
+    increaseStat: statName [
+        | current |
+        current := stats at: statName ifAbsent: [ 10 ].
+        stats at: statName put: (current + 1).
+    ]
+
     stats [ ^stats ]
     inventory [ ^inventory ]
     companions [ ^companions ]
 
     findItemNamed: aString [
         ^inventory detect: [ :item | item name sameAs: aString ] ifNone: [ nil ]
+    ]
+
+    takeItem: anItem [
+        inventory add: anItem.
     ]
 
     dropItem: aString [
@@ -41,11 +51,18 @@ Entity subclass: Player [
     ]
 
     displayStats [
-        Transcript show: '--- STATYSTYKI ---'; cr.
-        stats keysAndValuesDo: [ :name :val | 
-            Transcript show: name, ': ', val printString, ' (mod: ', (self calculateModifier: name) printString, ')'; cr.
-        ].
-        Transcript cr.
+        | statsLine |
+        Transcript show: '--- CURRENT STATISTICS ---'; cr.
+        statsLine := '[STR: ', (stats at: 'strength') printString, 
+                     ' | DEX: ', (stats at: 'dexterity') printString,
+                     ' | INT: ', (stats at: 'intelligence') printString,
+                     ' | CHA: ', (stats at: 'charisma') printString,
+                     ' | END: ', (stats at: 'endurance') printString, ']'.
+        Transcript show: statsLine; cr.
+        Transcript show: 'Companions: '.
+        companions isEmpty ifTrue: [ Transcript show: 'None' ]
+        ifFalse: [ companions do: [ :c | Transcript show: c name, ' ' ] ].
+        Transcript cr; cr.
     ]
 
     "Calculate modifier: (Stat - 10) + item_bonuses + companion_bonuses"
@@ -54,7 +71,7 @@ Entity subclass: Player [
         base := stats at: statName ifAbsent: [ 10 ].
         mod := (base - 10).
         
-        "Bonusy od towarzyszy (Sekcja 2.A)"
+        "Bonuses from companions"
         companions do: [ :comp | 
             (comp boostedStat sameAs: statName) ifTrue: [ 
                 mod := mod + comp bonusValue.
@@ -63,17 +80,6 @@ Entity subclass: Player [
         
         ^mod
     ]
-
-    takeItem: anItem [
-        inventory add: anItem.
-    ]
-
-    useItem: anItem [
-        "Logic for consuming items"
-        (anItem isKindOf: Item) ifTrue: [
-            inventory remove: anItem.
-        ]
-    ]
     
     rollCheck: aStatName against: manualDC [
         | roll modifier total |
@@ -81,18 +87,15 @@ Entity subclass: Player [
         modifier := self calculateModifier: aStatName.
         total := roll + modifier.
         
-        Transcript show: 'Rzut kością (', aStatName, ' DC ', manualDC printString, '): ', roll printString, ' + ', modifier printString, ' = ', total printString; cr.
+        Transcript show: '--- ', aStatName asLowercase, ' CHECK ---'; cr.
+        Transcript show: 'Rolled: ', roll printString, ' + Bonus: ', modifier printString, ' = ', total printString, ' (Difficulty: ', manualDC printString, ')'; cr.
 
-        roll = 20 ifTrue: [ 
-            Transcript show: 'SUKCES KRYTYCZNY!'; cr.
-            ^ #criticalSuccess 
-        ].
-        total >= manualDC ifTrue: [ 
-            Transcript show: 'Sukces!'; cr.
-            ^ #success 
-        ] ifFalse: [ 
-            Transcript show: 'Porażka...'; cr.
-            ^ #failure 
+        (total >= manualDC or: [ roll = 20 ]) ifTrue: [ 
+            Transcript show: '>> SUCCESS!'; cr.
+            ^#success
+        ] ifFalse: [
+            Transcript show: '>> FAILURE!'; cr.
+            ^#failure
         ].
     ]
 ]
