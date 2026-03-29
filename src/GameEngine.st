@@ -128,6 +128,7 @@ Object subclass: GameEngine [
             Transcript show: 'Choose a stat to increase (strength, dexterity, intelligence, charisma, endurance): '.
             
             choice := self normalize: FileStream stdin nextLine.
+            (choice sameAs: 'quit') ifTrue: [ isGameOver := true. ^self ].
             isGameOver ifTrue: [ ^self ].
 
             (mapping includesKey: choice) ifTrue: [
@@ -137,7 +138,9 @@ Object subclass: GameEngine [
                 points := points - 1.
                 Transcript show: '>> Your ', stat, ' increased to ', (player stats at: stat) printString, '!'; cr; cr.
             ] ifFalse: [
-                Transcript show: 'Error: Attribute "', choice, '" not recognized. Please try again.'; cr; cr.
+                (choice isEmpty) ifFalse: [
+                    Transcript show: 'Error: Attribute "', choice, '" not recognized. Please try again.'; cr; cr.
+                ].
             ].
         ].
         Transcript show: '*** Your attributes are forged! ***'; cr; cr.
@@ -165,6 +168,7 @@ Object subclass: GameEngine [
             Transcript cr; show: 'Type the name of the companion (e.g., astarion): '.
             
             choice := self normalize: FileStream stdin nextLine.
+            (choice sameAs: 'quit') ifTrue: [ isGameOver := true. ^self ].
             isGameOver ifTrue: [ ^self ].
             
             (comps includesKey: choice) ifTrue: [
@@ -173,7 +177,9 @@ Object subclass: GameEngine [
                 Transcript show: '>> SUCCESS: ', choice, ' has joined!'; cr; cr.
                 count := count - 1.
             ] ifFalse: [
-                Transcript show: 'Error: Companion "', choice, '" is not available.'; cr; cr.
+                (choice isEmpty) ifFalse: [
+                    Transcript show: 'Error: Companion "', choice, '" is not available.'; cr; cr.
+                ].
             ].
         ].
         Transcript show: '*** Your party is complete and ready for the House of Hope! ***'; cr; cr.
@@ -423,6 +429,7 @@ Object subclass: GameEngine [
     ]
 
     handleCombatCommand: action fullCmd: cmd [
+        (action = 'quit' or: [ cmd sameAs: 'quit' ]) ifTrue: [ isGameOver := true. activeEnemy := nil. ^true ].
         ((action = 'attack') or: [ cmd sameAs: 'attack' ]) ifTrue: [ self handleAttack. ^true ].
         ((action = 'flee') or: [ cmd sameAs: 'flee' ]) ifTrue: [ self handleFlee. ^true ].
         ((action = 'help') or: [ cmd sameAs: 'help' ]) ifTrue: [ self printInstructions. ^true ].
@@ -450,7 +457,11 @@ Object subclass: GameEngine [
                     block := commandMap at: action ifAbsent: [ nil ].
                     block ifNotNil: [
                         block numArgs = 0 ifTrue: [ block value ] ifFalse: [ block value: target ].
-                    ] ifNil: [ Transcript show: 'Unknown command. Type "help" for list.'; cr ].
+                    ] ifNil: [ 
+                        (action isEmpty) ifFalse: [
+                            Transcript show: 'Unknown command. Type "help" for list.'; cr 
+                        ].
+                    ].
                 ] ifNotNil: [
                     self handleCombatCommand: (self normalize: cmd) fullCmd: (self normalize: cmd).
                 ]
