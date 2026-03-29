@@ -245,8 +245,10 @@ Object subclass: GameEngine [
     ]
 
     handleSneak [
+        | result |
         Transcript show: 'You try to slip away before the fight starts...'; cr.
-        ((player rollCheck: 'dexterity' against: 14) = #success) ifTrue: [
+        result := player rollCheck: 'dexterity' against: 14.
+        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
             Transcript show: 'Success! You escaped the ', activeEnemy name; cr.
             activeEnemy := nil.
             world fleeBack.
@@ -314,8 +316,10 @@ Object subclass: GameEngine [
     ]
 
     handleFlee [
+        | result |
         Transcript show: 'You desperately try to break away from the fight!'; cr.
-        ((player rollCheck: 'dexterity' against: 17) = #success) ifTrue: [
+        result := player rollCheck: 'dexterity' against: 17.
+        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
             Transcript show: 'You managed to run away!'; cr.
             activeEnemy := nil.
             world fleeBack.
@@ -370,10 +374,12 @@ Object subclass: GameEngine [
     ]
 
     handleExamine: itemName [
+        | result |
         itemName ifNil: [ Transcript show: 'Examine what?'; cr. ^false ].
         (player findItemNamed: itemName) ifNotNil: [ :item |
             Transcript show: item description; cr.
-            (player rollCheck: 'intelligence' against: 12) = #success ifTrue: [ 
+            result := player rollCheck: 'intelligence' against: 12.
+            (result = #success or: [ result = #criticalSuccess ]) ifTrue: [ 
                 (item hint notNil and: [ item hint isEmpty not ]) ifTrue: [ Transcript show: 'Hint: ', item hint; cr ].
             ].
         ] ifNil: [ Transcript show: 'You don''t have "', itemName, '".'; cr ].
