@@ -17,7 +17,12 @@ Object subclass: DiceRoller [
     ]
 
     "General roll"
-    roll: anInteger [
-        ^ (1 to: anInteger) atRandom
+    roll: max [
+        ^ (1 to: max) atRandom
+    ]
+
+    "Roll in range"
+    roll: min to: max [
+        ^ (min to: max) atRandom
     ]
 ]
