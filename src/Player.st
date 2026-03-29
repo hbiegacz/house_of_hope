@@ -21,7 +21,7 @@ Entity subclass: Player [
         inventory := OrderedCollection new.
         companions := OrderedCollection new.
         
-        self hp: 30; maxHp: 30.
+        self hp: 20; maxHp: 20.
     ]
 
     increaseStat: statName [
