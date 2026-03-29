@@ -33,6 +33,7 @@ Object subclass: GameState [
     riddleSolved [ ^riddleSolved ]
     riddleSolved: aBoolean [ riddleSolved := aBoolean ]
 
+    contractTaken [ ^contractTaken ]
     contractTaken: aBoolean [ contractTaken := aBoolean ]
 
     secretTunnelOpen [ ^secretTunnelOpen ]
