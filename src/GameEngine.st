@@ -470,7 +470,6 @@ Object subclass: GameEngine [
             ].
             Transcript show: 'Sphinx: "I have a riddle. Answer, and I grant you knowledge. Fail, and I take your life-blood."'; cr.
             Transcript show: 'Sphinx: "', npc riddle, '"'; cr.
-            Transcript show: '(Type your answer, e.g. promise)'; cr.
             Transcript show: 'Answer: '.
             answer := self normalize: FileStream stdin nextLine.
             isGameOver ifTrue: [ ^false ].
