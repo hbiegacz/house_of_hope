@@ -38,7 +38,7 @@ Object subclass: World [
         rooms at: 'Foyer' put: (Room name: 'Foyer' description: 'The central hub of the House of Hope. Gilded mirrors line the walls, reflecting a haunted version of yourself.').
         rooms at: 'Banquet Hall' put: (Room name: 'Banquet Hall' description: 'A vast dining hall. A table overflows with rotting, magical delicacies.').
         rooms at: 'Vault' put: (Room name: 'Vault' description: 'A treasure chamber protected by a magical barrier. You see priceless artifacts.').
-        rooms at: 'Prison' put: (Room name: 'Prison' description: 'In the center, a woman named Hope is bound by glowing, magical chains.').
+        rooms at: 'Prison' put: (Room name: 'Prison' description: 'In the center, a woman named Hope is bound by glowing, magical chains. She whispers: "The hammer... only the Orphic Hammer can break this torment... (free_hope.)"').
         rooms at: 'Garden' put: (Room name: 'Garden' description: 'Twisted black roses and obsidian statues fill this eerie courtyard.').
         rooms at: 'Servant Quarters' put: (Room name: 'Servant Quarters' description: 'Small, sparse beds that smell of old fear and cheap incense.').
         rooms at: 'Kitchen' put: (Room name: 'Kitchen' description: 'Heavy iron pots bubble with something best left untasted.').
