@@ -107,8 +107,13 @@ Object subclass: World [
     "Map display"
     printMap [
         Transcript cr; show: '        --- HOUSE OF HOPE MAP ---'; cr.
-        Transcript show: '                   [ Vault ] <---> [ Secret Tunnel ]'; cr.
-        Transcript show: '                       ^                   |'; cr.
+        (GameState current secretTunnelOpen) ifTrue: [
+            Transcript show: '                   [ Vault ] <---> [ Secret Tunnel ]'; cr.
+            Transcript show: '                       ^                    |'; cr.
+        ] ifFalse: [
+            Transcript show: '                   [ Vault ]'; cr.
+            Transcript show: '                       ^'; cr.
+        ].
         Transcript show: ' [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]'; cr.
         Transcript show: '     ^           (      ^       )         ^'; cr.
         Transcript show: ' [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]'; cr.
@@ -126,8 +131,25 @@ Object subclass: World [
             Transcript show: 'Vault is protected by a magical barrier. Need Incantation.'; cr. ^false
         ].
         
-        (nextRoom name = 'Secret Tunnel' and: [ (player findItemNamed: 'Rusty Key') isNil ]) ifTrue: [
-            Transcript show: 'Secret Tunnel is locked. Need Rusty Key.'; cr. ^false
+        (nextRoom name = 'Secret Tunnel' and: [ GameState current secretTunnelOpen not ]) ifTrue: [
+            | key |
+            key := player findItemNamed: 'Rusty Key'.
+            key ifNotNil: [
+                GameState current secretTunnelOpen: true.
+                (currentRoom name = 'Vault') ifTrue: [
+                    Transcript show: 'You insert the Rusty Key into a hidden crack in the wall...'; cr.
+                    Transcript show: 'A stone panel slides open, revealing a Secret Tunnel!'; cr.
+                ] ifFalse: [
+                    Transcript show: 'Using the Rusty Key, you unlock the iron grate leading upwards.'; cr.
+                ].
+            ] ifNil: [
+                (currentRoom name = 'Vault') ifTrue: [
+                    Transcript show: 'You see a small, rusty keyhole hidden behind a tapestry.'; cr.
+                ] ifFalse: [
+                    Transcript show: 'An iron grate blocks the way to the tunnel above. It is locked.'; cr.
+                ].
+                ^false
+            ].
         ].
         
         previousRoom := nextRoom ifNotNil: [ currentRoom ].

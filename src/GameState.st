@@ -1,7 +1,7 @@
 "GameState class - Singleton managing game flags and state."
 
 Object subclass: GameState [
-    | barrierOpen prisonOpen hopeFree riddleSolved contractTaken |
+    | barrierOpen prisonOpen hopeFree riddleSolved contractTaken secretTunnelOpen |
 
     GameState class [
         | currentInstance |
@@ -18,6 +18,7 @@ Object subclass: GameState [
         hopeFree := false.
         riddleSolved := false.
         contractTaken := false.
+        secretTunnelOpen := false.
     ]
 
     barrierOpen [ ^barrierOpen ]
@@ -32,6 +33,8 @@ Object subclass: GameState [
     riddleSolved [ ^riddleSolved ]
     riddleSolved: aBoolean [ riddleSolved := aBoolean ]
 
-    contractTaken [ ^contractTaken ]
     contractTaken: aBoolean [ contractTaken := aBoolean ]
+
+    secretTunnelOpen [ ^secretTunnelOpen ]
+    secretTunnelOpen: aBoolean [ secretTunnelOpen := aBoolean ]
 ]
