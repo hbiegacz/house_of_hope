@@ -25,9 +25,13 @@ Entity subclass: Player [
     ]
 
     increaseStat: statName [
+        self increaseStat: statName by: 1.
+    ]
+
+    increaseStat: statName by: anInteger [
         | current |
         current := stats at: statName ifAbsent: [ 10 ].
-        stats at: statName put: (current + 1).
+        stats at: statName put: (current + anInteger).
     ]
 
     stats [ ^stats ]

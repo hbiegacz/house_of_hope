@@ -389,6 +389,23 @@ Object subclass: GameEngine [
             player heal: 10. player inventory remove: item.
             Transcript show: 'Drank potion. +10 HP.'; cr. ^true
         ].
+        (item name sameAs: 'Strange Brew') ifTrue: [
+            | effect |
+            player inventory remove: item.
+            effect := (1 to: 3) atRandom.
+            (effect = 1) ifTrue: [
+                Transcript show: 'It tasted like strawberries. Nothing happened.'; cr. ^true
+            ].
+            (effect = 2) ifTrue: [
+                Transcript show: 'It was poison! You lost 5 HP.'; cr.
+                player takeDamage: 5. ^true
+            ].
+            (effect = 3) ifTrue: [
+                Transcript show: 'Your muscles ripple with magical energy!'; cr.
+                Transcript show: '>> PERMANENT BONUS: +2 to Strength.'; cr.
+                player increaseStat: 'strength' by: 2. ^true
+            ].
+        ].
         (item name sameAs: 'Incantation') ifTrue: [
             (world currentRoom name = 'Banquet Hall') ifTrue: [
                 Transcript show: 'Vault barrier disappears!'; cr.
