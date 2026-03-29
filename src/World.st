@@ -54,6 +54,7 @@ Object subclass: World [
         banquet addItem: ((Item name: 'Potion' description: 'A red liquid vial (+10 HP).')
             hint: 'Heals 10 hit points.').
         
+        boudoir := rooms at: 'Boudoir'.
         boudoir addItem: ((Item name: 'Orphic Hammer' description: 'A powerful hammer for shattering infernal bonds.')
             hint: 'Can break the chains in the prison.').
         boudoir addItem: ((Item name: 'Strange Brew' description: 'A murky, bubbling concoction. It smells unpredictable.')
