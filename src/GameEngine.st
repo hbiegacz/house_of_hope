@@ -201,11 +201,17 @@ Object subclass: GameEngine [
         enemyHeader := '--- ', activeEnemy name asUppercase, ' ATTACKS ---'.
         Transcript cr; show: enemyHeader; cr.
         
-        (roll >= ac) ifTrue: [
-            dmg := (DiceRoller current roll: 6) - (player calculateModifier: 'endurance').
-            dmg := dmg max: 1.
+        (roll = 20) ifTrue: [ Transcript show: 'CRITICAL HIT!'; cr. ].
+
+        (roll >= ac or: [ roll = 20 ]) ifTrue: [
+            | baseDmg bonus |
+            baseDmg := DiceRoller current roll: 6.
+            (roll = 20) ifTrue: [ baseDmg := baseDmg * 2 ].
+            bonus := player calculateModifier: 'endurance'.
+            dmg := (baseDmg - bonus) max: 1.
+            
             player takeDamage: dmg.
-            Transcript show: 'You take ', dmg printString, ' damage ', player hpDisplay; cr.
+            Transcript show: 'Took ', dmg printString, ' dmg (Endurance saved: ', bonus printString, '). HP: ', player hp printString; cr.
             (player isAlive) ifFalse: [
                 Transcript show: 'YOU DIED... The House of Hope has claimed your soul.'; cr.
                 isGameOver := true.
@@ -226,9 +232,14 @@ Object subclass: GameEngine [
         
         (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
             damage := DiceRoller current roll: 8.
-            (result = #criticalSuccess) ifTrue: [ damage := damage * 2 ].
+            (result = #criticalSuccess) ifTrue: [ damage := damage * 2. ].
             activeEnemy takeDamage: damage.
-            Transcript cr; show: 'HIT! ', damage printString, ' dmg. (Enemy HP: ', activeEnemy hp printString, ')'; cr.
+            
+            (result = #criticalSuccess) ifTrue: [ 
+                Transcript cr; show: '*** CRITICAL HIT! *** ', damage printString, ' dmg! (Enemy HP: ', activeEnemy hp printString, ')'; cr.
+            ] ifFalse: [
+                Transcript cr; show: 'HIT! ', damage printString, ' dmg. (Enemy HP: ', activeEnemy hp printString, ')'; cr.
+            ].
             (activeEnemy isAlive) ifFalse: [
                 (activeEnemy name sameAs: 'Raphael') ifTrue: [
                     Transcript cr.

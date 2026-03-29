@@ -77,7 +77,11 @@ Entity subclass: Player [
         
         Transcript show: aStatName asLowercase, ' CHECK :  Rolled: ', roll printString, ' + Bonus: ', modifier printString, ' = ', total printString, ' (DC: ', manualDC printString, ')'; cr.
 
-        (total >= manualDC or: [ roll = 20 ]) ifTrue: [ 
+        (roll = 20) ifTrue: [
+            Transcript show: '>> CRITICAL SUCCESS!'; cr. ^#criticalSuccess
+        ].
+
+        (total >= manualDC) ifTrue: [ 
             Transcript show: '>> SUCCESS!'; cr. ^#success
         ] ifFalse: [
             Transcript show: '>> FAILURE!'; cr. ^#failure
