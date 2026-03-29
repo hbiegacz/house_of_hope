@@ -1,7 +1,7 @@
 "World class - Singleton managing the game map and progression."
 
 Object subclass: World [
-    | rooms currentRoom player |
+    | rooms currentRoom previousRoom player |
     
     World class [
         | currentInstance |
@@ -128,10 +128,23 @@ Object subclass: World [
             Transcript show: 'Secret Tunnel is locked. Need Rusty Key.'; cr. ^false
         ].
         
+        previousRoom := nextRoom ifNotNil: [ currentRoom ].
         currentRoom := nextRoom.
         self printMap.
         currentRoom describe.
         ^true
+    ]
+    
+    fleeBack [
+        previousRoom ifNotNil: [
+            currentRoom := previousRoom.
+            Transcript show: 'You scrambled back to ', currentRoom name; cr.
+            self printMap.
+            currentRoom describe.
+            ^true
+        ].
+        Transcript show: 'Nowhere to run!'; cr.
+        ^false
     ]
     
     look [

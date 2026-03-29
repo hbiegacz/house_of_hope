@@ -52,6 +52,12 @@ Object subclass: GameEngine [
             '  help            - display this help'
             '  quit            - exit the game'
             ''
+            'Combat Actions:'
+            '  attack          - standard physical attack (Strength)'
+            '  sneak           - escape quietly on Turn 1 (Dexterity, DC 14)'
+            '  flee            - run away mid-fight from Turn 2 (Dexterity, DC 17)'
+            '  drink_potion    - heal 10 HP'
+            ''
         ).
 
         player := Player new.
@@ -96,7 +102,11 @@ Object subclass: GameEngine [
         activeEnemy ifNil: [ 
             prompt := '> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) '.
         ] ifNotNil: [ 
-            prompt := 'Choose: attack | flee | drink_potion | help. [COMBAT] > '.
+            (combatTurn = 1) ifTrue: [
+                prompt := 'Choose: attack | sneak | drink_potion | help. [COMBAT T1] > '.
+            ] ifFalse: [
+                prompt := 'Choose: attack | flee | drink_potion | help. [COMBAT T', combatTurn printString, '] > '.
+            ].
         ].
         Transcript show: prompt.
         line := FileStream stdin nextLine.
@@ -211,8 +221,11 @@ Object subclass: GameEngine [
 
         (roll >= ac or: [ roll = 20 ]) ifTrue: [
             | baseDmg bonus |
-            baseDmg := DiceRoller current roll: 6.
-            (roll = 20) ifTrue: [ baseDmg := baseDmg * 2 ].
+            (roll = 20) ifTrue: [ 
+                baseDmg := (DiceRoller current roll: 3 to: 8) * 2.
+            ] ifFalse: [
+                baseDmg := DiceRoller current roll: 3 to: 8.
+            ].
             bonus := player calculateModifier: 'endurance'.
             dmg := (baseDmg - bonus) max: 1.
             
@@ -225,10 +238,24 @@ Object subclass: GameEngine [
         ] ifFalse: [ Transcript show: 'You avoided the attack!'; cr ].
 
         (GameState current hopeFree) ifTrue: [
-            dmg := (DiceRoller current roll: 6) + 2.
+            dmg := (DiceRoller current roll: 3 to: 8).
             player heal: dmg.
             Transcript cr; show: 'Hope prays for you! Divine light heals you for ', dmg printString, ' HP. ', player hpDisplay; cr.
         ].
+    ]
+
+    handleSneak [
+        Transcript show: 'You try to slip away before the fight starts...'; cr.
+        ((player rollCheck: 'dexterity' against: 14) = #success) ifTrue: [
+            Transcript show: 'Success! You escaped the ', activeEnemy name; cr.
+            activeEnemy := nil.
+            world fleeBack.
+            ^true
+        ].
+        Transcript show: 'The enemy heard you! Combat begins!'; cr.
+        self handleEnemyTurn.
+        combatTurn := combatTurn + 1.
+        ^true
     ]
 
     handleAttack [
@@ -237,8 +264,11 @@ Object subclass: GameEngine [
         result := player rollCheck: 'strength' against: activeEnemy armorClass.
         
         (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
-            damage := DiceRoller current roll: 8.
-            (result = #criticalSuccess) ifTrue: [ damage := damage * 2. ].
+            (result = #criticalSuccess) ifTrue: [ 
+                damage := (player stats at: 'strength').
+            ] ifFalse: [
+                damage := DiceRoller current roll: 8.
+            ].
             activeEnemy takeDamage: damage.
             
             (result = #criticalSuccess) ifTrue: [ 
@@ -284,9 +314,16 @@ Object subclass: GameEngine [
     ]
 
     handleFlee [
-        Transcript show: 'You flee back south!'; cr.
-        activeEnemy := nil.
-        world moveTo: 'south'.
+        Transcript show: 'You desperately try to break away from the fight!'; cr.
+        ((player rollCheck: 'dexterity' against: 17) = #success) ifTrue: [
+            Transcript show: 'You managed to run away!'; cr.
+            activeEnemy := nil.
+            world fleeBack.
+            ^true
+        ].
+        Transcript show: 'The enemy blocks your path! You are stuck!'; cr.
+        self handleEnemyTurn.
+        combatTurn := combatTurn + 1.
         ^true
     ]
 
@@ -431,7 +468,17 @@ Object subclass: GameEngine [
     handleCombatCommand: action fullCmd: cmd [
         (action = 'quit' or: [ cmd sameAs: 'quit' ]) ifTrue: [ isGameOver := true. activeEnemy := nil. ^true ].
         ((action = 'attack') or: [ cmd sameAs: 'attack' ]) ifTrue: [ self handleAttack. ^true ].
-        ((action = 'flee') or: [ cmd sameAs: 'flee' ]) ifTrue: [ self handleFlee. ^true ].
+        
+        ((action = 'sneak') or: [ cmd sameAs: 'sneak' ]) ifTrue: [ 
+            (combatTurn = 1) ifTrue: [ self handleSneak. ^true ] 
+            ifFalse: [ Transcript show: 'Too late to sneak! Use "flee".'; cr. ^true ].
+        ].
+        
+        ((action = 'flee') or: [ cmd sameAs: 'flee' ]) ifTrue: [ 
+            (combatTurn > 1) ifTrue: [ self handleFlee. ^true ]
+            ifFalse: [ Transcript show: 'Use "sneak" in the first round.'; cr. ^true ].
+        ].
+
         ((action = 'help') or: [ cmd sameAs: 'help' ]) ifTrue: [ self printInstructions. ^true ].
         (#('drink_potion' 'drinkpotion' 'use potion' 'drink potion') anySatisfy: [ :p | cmd sameAs: p ]) ifTrue: [ self handleCombatUsePotion. ^true ].
         ^false
