@@ -38,46 +38,34 @@ Entity subclass: Player [
         ^inventory detect: [ :item | item name sameAs: aString ] ifNone: [ nil ]
     ]
 
-    takeItem: anItem [
-        inventory add: anItem.
-    ]
-
+    takeItem: anItem [ inventory add: anItem. ]
     dropItem: aString [
         | item |
         item := self findItemNamed: aString.
         item ifNil: [ ^nil ].
-        inventory remove: item.
-        ^item
+        inventory remove: item. ^item
     ]
 
     displayStats [
-        | statsLine |
         Transcript show: '--- CURRENT STATISTICS ---'; cr.
-        statsLine := '[STR: ', (stats at: 'strength') printString, 
+        Transcript show: '[STR: ', (stats at: 'strength') printString, 
                      ' | DEX: ', (stats at: 'dexterity') printString,
                      ' | INT: ', (stats at: 'intelligence') printString,
                      ' | CHA: ', (stats at: 'charisma') printString,
-                     ' | END: ', (stats at: 'endurance') printString, ']'.
-        Transcript show: statsLine; cr.
+                     ' | END: ', (stats at: 'endurance') printString, ']'; cr.
         Transcript show: 'Companions: '.
         companions isEmpty ifTrue: [ Transcript show: 'None' ]
         ifFalse: [ companions do: [ :c | Transcript show: c name, ' ' ] ].
         Transcript cr; cr.
     ]
 
-    "Calculate modifier: (Stat - 10) + item_bonuses + companion_bonuses"
     calculateModifier: statName [
         | base mod |
         base := stats at: statName ifAbsent: [ 10 ].
         mod := (base - 10).
-        
-        "Bonuses from companions"
         companions do: [ :comp | 
-            (comp boostedStat sameAs: statName) ifTrue: [ 
-                mod := mod + comp bonusValue.
-            ]
+            (comp boostedStat sameAs: statName) ifTrue: [ mod := mod + comp bonusValue ].
         ].
-        
         ^mod
     ]
     
@@ -87,15 +75,12 @@ Entity subclass: Player [
         modifier := self calculateModifier: aStatName.
         total := roll + modifier.
         
-        Transcript show: '--- ', aStatName asLowercase, ' CHECK ---'; cr.
-        Transcript show: 'Rolled: ', roll printString, ' + Bonus: ', modifier printString, ' = ', total printString, ' (Difficulty: ', manualDC printString, ')'; cr.
+        Transcript show: aStatName asLowercase, ' CHECK :  Rolled: ', roll printString, ' + Bonus: ', modifier printString, ' = ', total printString, ' (DC: ', manualDC printString, ')'; cr.
 
         (total >= manualDC or: [ roll = 20 ]) ifTrue: [ 
-            Transcript show: '>> SUCCESS!'; cr.
-            ^#success
+            Transcript show: '>> SUCCESS!'; cr. ^#success
         ] ifFalse: [
-            Transcript show: '>> FAILURE!'; cr.
-            ^#failure
+            Transcript show: '>> FAILURE!'; cr. ^#failure
         ].
     ]
 ]

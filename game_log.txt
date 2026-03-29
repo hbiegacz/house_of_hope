@@ -1,0 +1,1317 @@
+<src git:(main*)> gst Entity.st Item.st DiceRoller.st GameState.st Companion.st NPC.st Player.st Room.st Enemy.st World.st GameEngine.st | tee game_log.txt
+
+*** STEP 1: DEFINE YOUR HERO ***
+
+--- CHARACTER DEVELOPMENT ---
+[STR: 10 | DEX: 10 | INT: 10 | CHA: 10 | END: 10]
+Points remaining: 5
+Choose a stat to increase (strength, dexterity, intelligence, charisma, endurance): strength
+>> Your strength increased to 11!
+
+--- CHARACTER DEVELOPMENT ---
+[STR: 11 | DEX: 10 | INT: 10 | CHA: 10 | END: 10]
+Points remaining: 4
+Choose a stat to increase (strength, dexterity, intelligence, charisma, endurance): strength
+>> Your strength increased to 12!
+
+--- CHARACTER DEVELOPMENT ---
+[STR: 12 | DEX: 10 | INT: 10 | CHA: 10 | END: 10]
+Points remaining: 3
+Choose a stat to increase (strength, dexterity, intelligence, charisma, endurance): strength
+>> Your strength increased to 13!
+
+--- CHARACTER DEVELOPMENT ---
+[STR: 13 | DEX: 10 | INT: 10 | CHA: 10 | END: 10]
+Points remaining: 2
+Choose a stat to increase (strength, dexterity, intelligence, charisma, endurance): intelligence
+>> Your intelligence increased to 11!
+
+--- CHARACTER DEVELOPMENT ---
+[STR: 13 | DEX: 10 | INT: 11 | CHA: 10 | END: 10]
+Points remaining: 1
+Choose a stat to increase (strength, dexterity, intelligence, charisma, endurance): intelligence
+>> Your intelligence increased to 12!
+
+*** Your attributes are forged! ***
+
+*** STEP 2: ASSEMBLE YOUR PARTY ***
+
+Recruiting for slot #3:
+--- AVAILABLE COMPANIONS ---
+- gale: Provides +4 bonus to intelligence checks.
+- laezel: Provides +3 bonus to strength checks.
+- shadowheart: Provides +4 bonus to endurance checks.
+- astarion: Provides +5 bonus to dexterity checks.
+- wyll: Provides +3 bonus to charisma checks.
+
+Type the name of the companion (e.g., astarion): gale
+>> SUCCESS: gale has joined!
+
+Recruiting for slot #2:
+--- AVAILABLE COMPANIONS ---
+- laezel: Provides +3 bonus to strength checks.
+- shadowheart: Provides +4 bonus to endurance checks.
+- astarion: Provides +5 bonus to dexterity checks.
+- wyll: Provides +3 bonus to charisma checks.
+
+Type the name of the companion (e.g., astarion): laezel
+>> SUCCESS: laezel has joined!
+
+Recruiting for slot #1:
+--- AVAILABLE COMPANIONS ---
+- shadowheart: Provides +4 bonus to endurance checks.
+- astarion: Provides +5 bonus to dexterity checks.
+- wyll: Provides +3 bonus to charisma checks.
+
+Type the name of the companion (e.g., astarion): shadowheart
+>> SUCCESS: shadowheart has joined!
+
+*** Your party is complete and ready for the House of Hope! ***
+
+
+
+Available commands:
+  go [direction]  - north, south, east, west
+  look            - describe room and exits
+  search          - search for items in the room
+  take [item]     - pick up an item
+  inventory       - your equipment
+  examine [item]  - investigate an item
+  use [item]      - use an item
+  talk [npc]      - talk to an NPC
+  stats           - your current statistics
+  help            - display this help
+  quit            - exit the game
+
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Foyer
+--- LOCATION DESCRIPTION ---
+The central hub of the House of Hope. Gilded mirrors line the walls, reflecting a haunted version of yourself.
+
+>> You found the following items. Use "take [item]" to pick them up.
+- Old Coin: An old rare coin.
+
+Available Exits:
+- west
+- north
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) take old coin
+You took: Old Coin
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go west
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Servant Quarters
+--- LOCATION DESCRIPTION ---
+Small, sparse beds that smell of old fear and cheap incense.
+
+>> You see someone here: Collector. (Type: talk Collector)
+
+Available Exits:
+- north
+- east
+
+
+!!! WARNING !!! (Roll: d20 vs AC)
+A wild Imp appears in the servant quarters!
+
+You are fighting: Imp
+A small, annoying flying devil.
+
+--- TURN 1 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 6 + Bonus: 6 = 12 (DC: 12)
+>> SUCCESS!
+
+Hit! You deal 5 damage (Enemy HP: 10)
+Imp attacks! (Roll: 3 vs AC 12)
+You avoided the attack!
+
+--- TURN 2 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 4 + Bonus: 6 = 10 (DC: 12)
+>> FAILURE!
+You missed!
+Imp attacks! (Roll: 10 vs AC 12)
+You avoided the attack!
+
+--- TURN 3 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 16 + Bonus: 6 = 22 (DC: 12)
+>> SUCCESS!
+
+Hit! You deal 2 damage (Enemy HP: 8)
+Imp attacks! (Roll: 9 vs AC 12)
+You avoided the attack!
+
+--- TURN 4 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 20 + Bonus: 6 = 26 (DC: 12)
+>> SUCCESS!
+
+Hit! You deal 7 damage (Enemy HP: 1)
+Imp attacks! (Roll: 10 vs AC 12)
+You avoided the attack!
+
+--- TURN 5 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 14 + Bonus: 6 = 20 (DC: 12)
+>> SUCCESS!
+
+Hit! You deal 1 damage (Enemy HP: 0)
+ENEMY DEFEATED!
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) talk collector
+Collector: A small devil obsessive about collections.
+Collector: "Ah! Kitchen has the Rusty Key!"
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) examine old coin
+An old rare coin.
+--- intelligence CHECK ---
+Rolled: 10 + Bonus: 6 = 16 (DC: 12)
+>> SUCCESS!
+Hint: Might interest a collector.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) talk collector
+Collector: A small devil obsessive about collections.
+Collector: "Ah! Kitchen has the Rusty Key!"
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go north
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Kitchen
+--- LOCATION DESCRIPTION ---
+Heavy iron pots bubble with something best left untasted.
+
+>> You found the following items. Use "take [item]" to pick them up.
+- Rusty Key: A heavy iron key.
+
+Available Exits:
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) take rusty key
+You took: Rusty Key
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) search
+
+Nothing found here.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) examine rusty key
+A heavy iron key.
+--- intelligence CHECK ---
+Rolled: 18 + Bonus: 6 = 24 (DC: 12)
+>> SUCCESS!
+Hint: Unlocks the Secret Tunnel between Vault and Garden.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go east
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Banquet Hall
+--- LOCATION DESCRIPTION ---
+A vast dining hall. A table overflows with rotting, magical delicacies.
+
+>> You found the following items. Use "take [item]" to pick them up.
+- Incantation: An ancient scroll of shifting runes.
+- Potion: A red liquid vial (+10 HP).
+
+Available Exits:
+- west
+- north
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) take incantation
+You took: Incantation
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) take potion
+You took: Potion
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) examine incantation
+An ancient scroll of shifting runes.
+--- intelligence CHECK ---
+Rolled: 14 + Bonus: 6 = 20 (DC: 12)
+>> SUCCESS!
+Hint: It can open the passage to the Vault.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) examine potion
+A red liquid vial (+10 HP).
+--- intelligence CHECK ---
+Rolled: 4 + Bonus: 6 = 10 (DC: 12)
+>> FAILURE!
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) examine potion
+A red liquid vial (+10 HP).
+--- intelligence CHECK ---
+Rolled: 16 + Bonus: 6 = 22 (DC: 12)
+>> SUCCESS!
+Hint: Heals 10 hit points.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go east
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Garden
+--- LOCATION DESCRIPTION ---
+Twisted black roses and obsidian statues fill this eerie courtyard.
+
+>> You see someone here: Sphinx. (Type: talk Sphinx)
+
+Available Exits:
+- west
+- north
+- south
+
+
+!!! WARNING !!! (Roll: d20 vs AC)
+A wild Cambion appears in the garden!
+
+You are fighting: Cambion
+A powerful demonic warrior.
+
+--- TURN 1 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 13 + Bonus: 6 = 19 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 7 damage (Enemy HP: 33)
+Cambion attacks! (Roll: 17 vs AC 12)
+You take 1 damage (HP: 29)
+
+--- TURN 2 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 11 + Bonus: 6 = 17 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 1 damage (Enemy HP: 32)
+Cambion attacks! (Roll: 3 vs AC 12)
+You avoided the attack!
+
+--- TURN 3 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 10 + Bonus: 6 = 16 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 2 damage (Enemy HP: 30)
+Cambion attacks! (Roll: 17 vs AC 12)
+You take 1 damage (HP: 28)
+
+--- TURN 4 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 6 + Bonus: 6 = 12 (DC: 14)
+>> FAILURE!
+You missed!
+Cambion attacks! (Roll: 1 vs AC 12)
+You avoided the attack!
+
+--- TURN 5 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 13 + Bonus: 6 = 19 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 2 damage (Enemy HP: 28)
+Cambion attacks! (Roll: 20 vs AC 12)
+You take 2 damage (HP: 26)
+
+--- TURN 6 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 8 + Bonus: 6 = 14 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 8 damage (Enemy HP: 20)
+Cambion attacks! (Roll: 8 vs AC 12)
+You avoided the attack!
+
+--- TURN 7 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 12 + Bonus: 6 = 18 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 6 damage (Enemy HP: 14)
+Cambion attacks! (Roll: 11 vs AC 12)
+You avoided the attack!
+
+--- TURN 8 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 19 + Bonus: 6 = 25 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 3 damage (Enemy HP: 11)
+Cambion attacks! (Roll: 3 vs AC 12)
+You avoided the attack!
+
+--- TURN 9 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 3 + Bonus: 6 = 9 (DC: 14)
+>> FAILURE!
+You missed!
+Cambion attacks! (Roll: 5 vs AC 12)
+You avoided the attack!
+
+--- TURN 10 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 20 + Bonus: 6 = 26 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 8 damage (Enemy HP: 3)
+Cambion attacks! (Roll: 2 vs AC 12)
+You avoided the attack!
+
+--- TURN 11 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 6 + Bonus: 6 = 12 (DC: 14)
+>> FAILURE!
+You missed!
+Cambion attacks! (Roll: 9 vs AC 12)
+You avoided the attack!
+
+--- TURN 12 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 5 + Bonus: 6 = 11 (DC: 14)
+>> FAILURE!
+You missed!
+Cambion attacks! (Roll: 4 vs AC 12)
+You avoided the attack!
+
+--- TURN 13 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 3 + Bonus: 6 = 9 (DC: 14)
+>> FAILURE!
+You missed!
+Cambion attacks! (Roll: 19 vs AC 12)
+You take 1 damage (HP: 25)
+
+--- TURN 14 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 3 + Bonus: 6 = 9 (DC: 14)
+>> FAILURE!
+You missed!
+Cambion attacks! (Roll: 8 vs AC 12)
+You avoided the attack!
+
+--- TURN 15 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 9 + Bonus: 6 = 15 (DC: 14)
+>> SUCCESS!
+
+Hit! You deal 7 damage (Enemy HP: 0)
+ENEMY DEFEATED!
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) search
+
+Nothing found here.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) look
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       ) 
+                 [    Prison    ]
+
+
+Current position: Garden
+--- LOCATION DESCRIPTION ---
+Twisted black roses and obsidian statues fill this eerie courtyard.
+
+>> You see someone here: Sphinx. (Type: talk Sphinx)
+
+Available Exits:
+- west
+- north
+- south
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) talk sphinx
+Sphinx: A majestic creature with a human face.
+RIDDLE: I can be broken without being touched. What am I?
+Answer: promise
+Correct!
+Sphinx: "Use the hammer to free Hope."
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go south
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Boudoir
+--- LOCATION DESCRIPTION ---
+Raphael's private sanctuary. Velvet curtains and ancient scrolls.
+
+>> You found the following items. Use "take [item]" to pick them up.
+- Orphic Hammer: A powerful hammer for shattering infernal bonds.
+
+Available Exits:
+- west
+- north
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) take orphic hammer
+You took: Orphic Hammer
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go south 
+Error: Cannot go that way.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) examine hammer
+You don't have "hammer".
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) examine orphic hammer
+A powerful hammer for shattering infernal bonds.
+--- intelligence CHECK ---
+Rolled: 7 + Bonus: 6 = 13 (DC: 12)
+>> SUCCESS!
+Hint: Can break the chains in the prison.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go west
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Foyer
+--- LOCATION DESCRIPTION ---
+The central hub of the House of Hope. Gilded mirrors line the walls, reflecting a haunted version of yourself.
+
+
+Available Exits:
+- west
+- north
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go south
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Prison
+--- LOCATION DESCRIPTION ---
+In the center, a woman named Hope is bound by glowing, magical chains.
+
+
+Available Exits:
+- north
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) use orphic hammer
+Hope is free!
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) talk hope
+No one named "hope" here.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) talk Hope
+No one named "hope" here.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) look
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Prison
+--- LOCATION DESCRIPTION ---
+In the center, a woman named Hope is bound by glowing, magical chains.
+
+
+Available Exits:
+- north
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go north
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Foyer
+--- LOCATION DESCRIPTION ---
+The central hub of the House of Hope. Gilded mirrors line the walls, reflecting a haunted version of yourself.
+
+
+Available Exits:
+- west
+- north
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go north
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Banquet Hall
+--- LOCATION DESCRIPTION ---
+A vast dining hall. A table overflows with rotting, magical delicacies.
+
+
+Available Exits:
+- west
+- north
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go north
+Vault is protected by a magical barrier. Need Incantation.
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) use incantation
+Vault barrier disappears!
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go north
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Vault
+--- LOCATION DESCRIPTION ---
+A treasure chamber protected by a magical barrier. You see priceless artifacts.
+
+>> You found the following items. Use "take [item]" to pick them up.
+- Soul Contract: Your contract with Raphael.
+
+Available Exits:
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) examine soul contract
+You don't have "soul contract".
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go east
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Secret Tunnel
+--- LOCATION DESCRIPTION ---
+A narrow, damp passage smelling of mildew and secrets.
+
+
+Available Exits:
+- west
+- south
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go west
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Vault
+--- LOCATION DESCRIPTION ---
+A treasure chamber protected by a magical barrier. You see priceless artifacts.
+
+>> You found the following items. Use "take [item]" to pick them up.
+- Soul Contract: Your contract with Raphael.
+
+Available Exits:
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) take soul contract
+You took: Soul Contract
+*** YOU FEEL RAPHAEL'S GROWING ANGER ***
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go south
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Banquet Hall
+--- LOCATION DESCRIPTION ---
+A vast dining hall. A table overflows with rotting, magical delicacies.
+
+
+Available Exits:
+- west
+- north
+- south
+- east
+
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) go south
+
+        --- HOUSE OF HOPE MAP ---
+                   [ Vault ] <---> [ Secret Tunnel ]
+                       ^                   |
+ [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]
+     ^           (      ^       )         ^
+ [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]
+                 (      ^       )
+                 [    Prison    ]
+
+
+Current position: Foyer
+--- LOCATION DESCRIPTION ---
+The central hub of the House of Hope. Gilded mirrors line the walls, reflecting a haunted version of yourself.
+
+
+Available Exits:
+- west
+- north
+- south
+- east
+
+
+!!! WARNING !!! (Roll: d20 vs AC)
+A wild Raphael appears in the foyer!
+
+You are fighting: Raphael
+The lord of this house.
+
+--- TURN 1 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 2 + Bonus: 6 = 8 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 4 vs AC 12)
+You avoided the attack!
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 2 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 2 + Bonus: 6 = 8 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 8 vs AC 12)
+You avoided the attack!
+Hope healed you for 6 HP! (HP: 30)
+
+--- TURN 3 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 2 + Bonus: 6 = 8 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 13 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 8 HP! (HP: 30)
+
+--- TURN 4 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 15 + Bonus: 6 = 21 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 4 damage (Enemy HP: 96)
+Raphael attacks! (Roll: 17 vs AC 12)
+You take 2 damage (HP: 28)
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 5 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 18 + Bonus: 6 = 24 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 1 damage (Enemy HP: 95)
+Raphael attacks! (Roll: 19 vs AC 12)
+You take 2 damage (HP: 28)
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 6 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 3 + Bonus: 6 = 9 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 13 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 7 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 5 + Bonus: 6 = 11 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 7 vs AC 12)
+You avoided the attack!
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 8 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 20 + Bonus: 6 = 26 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 3 damage (Enemy HP: 92)
+Raphael attacks! (Roll: 18 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 6 HP! (HP: 30)
+
+--- TURN 9 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 19 + Bonus: 6 = 25 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 1 damage (Enemy HP: 91)
+Raphael attacks! (Roll: 14 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 8 HP! (HP: 30)
+
+--- TURN 10 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 19 + Bonus: 6 = 25 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 2 damage (Enemy HP: 89)
+Raphael attacks! (Roll: 11 vs AC 12)
+You avoided the attack!
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 11 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 18 + Bonus: 6 = 24 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 8 damage (Enemy HP: 81)
+Raphael attacks! (Roll: 6 vs AC 12)
+You avoided the attack!
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 12 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 15 + Bonus: 6 = 21 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 3 damage (Enemy HP: 78)
+Raphael attacks! (Roll: 1 vs AC 12)
+You avoided the attack!
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 13 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 5 + Bonus: 6 = 11 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 15 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 14 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 7 + Bonus: 6 = 13 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 11 vs AC 12)
+You avoided the attack!
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 15 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 18 + Bonus: 6 = 24 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 2 damage (Enemy HP: 76)
+Raphael attacks! (Roll: 7 vs AC 12)
+You avoided the attack!
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 16 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 8 + Bonus: 6 = 14 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 3 vs AC 12)
+You avoided the attack!
+Hope healed you for 8 HP! (HP: 30)
+
+--- TURN 17 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 15 + Bonus: 6 = 21 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 7 damage (Enemy HP: 69)
+Raphael attacks! (Roll: 2 vs AC 12)
+You avoided the attack!
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 18 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 19 + Bonus: 6 = 25 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 7 damage (Enemy HP: 62)
+Raphael attacks! (Roll: 20 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 19 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 8 + Bonus: 6 = 14 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 8 vs AC 12)
+You avoided the attack!
+Hope healed you for 6 HP! (HP: 30)
+
+--- TURN 20 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 20 + Bonus: 6 = 26 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 4 damage (Enemy HP: 58)
+Raphael attacks! (Roll: 4 vs AC 12)
+You avoided the attack!
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 21 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 1 + Bonus: 6 = 7 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 16 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 22 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 4 + Bonus: 6 = 10 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 1 vs AC 12)
+You avoided the attack!
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 23 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 14 + Bonus: 6 = 20 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 7 damage (Enemy HP: 51)
+Raphael attacks! (Roll: 9 vs AC 12)
+You avoided the attack!
+Hope healed you for 8 HP! (HP: 30)
+
+--- TURN 24 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 13 + Bonus: 6 = 19 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 4 damage (Enemy HP: 47)
+Raphael attacks! (Roll: 13 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 25 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 9 + Bonus: 6 = 15 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 6 vs AC 12)
+You avoided the attack!
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 26 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 7 + Bonus: 6 = 13 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 6 vs AC 12)
+You avoided the attack!
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 27 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 10 + Bonus: 6 = 16 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 1 damage (Enemy HP: 46)
+Raphael attacks! (Roll: 10 vs AC 12)
+You avoided the attack!
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 28 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 19 + Bonus: 6 = 25 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 3 damage (Enemy HP: 43)
+Raphael attacks! (Roll: 1 vs AC 12)
+You avoided the attack!
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 29 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 15 + Bonus: 6 = 21 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 6 damage (Enemy HP: 37)
+Raphael attacks! (Roll: 19 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 30 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 9 + Bonus: 6 = 15 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 10 vs AC 12)
+You avoided the attack!
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 31 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 9 + Bonus: 6 = 15 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 3 vs AC 12)
+You avoided the attack!
+Hope healed you for 6 HP! (HP: 30)
+
+--- TURN 32 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 10 + Bonus: 6 = 16 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 4 damage (Enemy HP: 33)
+Raphael attacks! (Roll: 20 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 33 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 8 + Bonus: 6 = 14 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 5 vs AC 12)
+You avoided the attack!
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 34 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 4 + Bonus: 6 = 10 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 1 vs AC 12)
+You avoided the attack!
+Hope healed you for 6 HP! (HP: 30)
+
+--- TURN 35 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 9 + Bonus: 6 = 15 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 11 vs AC 12)
+You avoided the attack!
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 36 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 3 + Bonus: 6 = 9 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 13 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 37 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 3 + Bonus: 6 = 9 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 8 vs AC 12)
+You avoided the attack!
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 38 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 7 + Bonus: 6 = 13 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 3 vs AC 12)
+You avoided the attack!
+Hope healed you for 8 HP! (HP: 30)
+
+--- TURN 39 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 19 + Bonus: 6 = 25 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 4 damage (Enemy HP: 29)
+Raphael attacks! (Roll: 7 vs AC 12)
+You avoided the attack!
+Hope healed you for 3 HP! (HP: 30)
+
+--- TURN 40 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 5 + Bonus: 6 = 11 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 20 vs AC 12)
+You take 2 damage (HP: 28)
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 41 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 10 + Bonus: 6 = 16 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 6 damage (Enemy HP: 23)
+Raphael attacks! (Roll: 11 vs AC 12)
+You avoided the attack!
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 42 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 8 + Bonus: 6 = 14 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 4 vs AC 12)
+You avoided the attack!
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 43 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 11 + Bonus: 6 = 17 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 2 damage (Enemy HP: 21)
+Raphael attacks! (Roll: 7 vs AC 12)
+You avoided the attack!
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 44 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 10 + Bonus: 6 = 16 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 5 damage (Enemy HP: 16)
+Raphael attacks! (Roll: 15 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 6 HP! (HP: 30)
+
+--- TURN 45 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 18 + Bonus: 6 = 24 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 1 damage (Enemy HP: 15)
+Raphael attacks! (Roll: 3 vs AC 12)
+You avoided the attack!
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 46 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 12 + Bonus: 6 = 18 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 1 damage (Enemy HP: 14)
+Raphael attacks! (Roll: 7 vs AC 12)
+You avoided the attack!
+Hope healed you for 8 HP! (HP: 30)
+
+--- TURN 47 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 8 + Bonus: 6 = 14 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 19 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 48 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 4 + Bonus: 6 = 10 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 14 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 49 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 1 + Bonus: 6 = 7 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 18 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 4 HP! (HP: 30)
+
+--- TURN 50 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 15 + Bonus: 6 = 21 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 6 damage (Enemy HP: 8)
+Raphael attacks! (Roll: 1 vs AC 12)
+You avoided the attack!
+Hope healed you for 6 HP! (HP: 30)
+
+--- TURN 51 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 17 + Bonus: 6 = 23 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 2 damage (Enemy HP: 6)
+Raphael attacks! (Roll: 19 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 7 HP! (HP: 30)
+
+--- TURN 52 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 5 + Bonus: 6 = 11 (DC: 16)
+>> FAILURE!
+You missed!
+Raphael attacks! (Roll: 14 vs AC 12)
+You take 1 damage (HP: 29)
+Hope healed you for 5 HP! (HP: 30)
+
+--- TURN 53 ---
+Choose: attack | flee | drink_potion | help. [COMBAT] > attack.
+--- strength CHECK ---
+Rolled: 20 + Bonus: 6 = 26 (DC: 16)
+>> SUCCESS!
+
+Hit! You deal 7 damage (Enemy HP: 0)
+ENEMY DEFEATED!
+> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit)

@@ -10,6 +10,7 @@ Object subclass: Entity [
         ^e
     ]
 
+    "Getters/Setters"
     name [ ^name ]
     name: aString [ name := aString ]
 
@@ -19,17 +20,21 @@ Object subclass: Entity [
     maxHp [ ^maxHp ]
     maxHp: anInteger [ maxHp := anInteger ]
 
-    isAlive [
-        ^hp > 0
+    "Check if entity still exists"
+    isAlive [ ^hp > 0 ]
+
+    "Core mechanics"
+    hpDisplay [
+        | suffix |
+        suffix := (hp = maxHp) ifTrue: [ ' (max)' ] ifFalse: [ '' ].
+        ^ '(HP: ', hp printString, suffix, ')'
     ]
 
     takeDamage: anAmount [
-        hp := hp - anAmount.
-        hp < 0 ifTrue: [ hp := 0 ].
+        hp := (hp - anAmount) max: 0.
     ]
 
     heal: anAmount [
-        hp := hp + anAmount.
-        hp > maxHp ifTrue: [ hp := maxHp ].
+        hp := (hp + anAmount) min: maxHp.
     ]
 ]

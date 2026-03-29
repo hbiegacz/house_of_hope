@@ -1,4 +1,4 @@
-"Item class - Base class for objects in the game world."
+"Item class - Objects that can be carried or used."
 
 Object subclass: Item [
     | name description hint |
@@ -6,10 +6,11 @@ Object subclass: Item [
     Item class >> name: aName description: aDescription [
         | i |
         i := self new.
-        i name: aName; description: aDescription; hint: ''.
+        i name: aName; description: aDescription.
         ^i
     ]
 
+    "Accessors"
     name [ ^name ]
     name: aString [ name := aString ]
 
@@ -19,7 +20,6 @@ Object subclass: Item [
     hint [ ^hint ]
     hint: aString [ hint := aString ]
     
-    "For debugging/list display"
     printOn: aStream [
         aStream nextPutAll: name.
     ]

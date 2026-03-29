@@ -14,6 +14,7 @@ Object subclass: NPC [
         dialogue := OrderedCollection new.
     ]
 
+    "Accessors"
     name [ ^name ]
     name: aString [ name := aString ]
 

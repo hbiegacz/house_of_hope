@@ -1,3 +1,15 @@
+"String extension for cleaning up input."
+String extend [
+    trim [
+        | start end |
+        start := 1.
+        [ start <= self size and: [ (self at: start) isSeparator ] ] whileTrue: [ start := start + 1 ].
+        end := self size.
+        [ end >= start and: [ (self at: end) isSeparator ] ] whileTrue: [ end := end - 1 ].
+        ^ (start > end) ifTrue: [ '' ] ifFalse: [ self copyFrom: start to: end ]
+    ]
+]
+
 "GameEngine class
 Responsibilities:
 * handle game loop
@@ -6,8 +18,8 @@ Responsibilities:
 * main coordinator for World and Player"
 
 Object subclass: GameEngine [
-    | isGameOver player world activeEnemy introductionText instructionsText combatTurn |
- 
+    | isGameOver player world activeEnemy introductionText instructionsText combatTurn commandMap |
+
     GameEngine class >> new [
         | g |
         g := super new.
@@ -28,16 +40,15 @@ Object subclass: GameEngine [
         instructionsText := #(
             ''
             'Available commands:'
-            '  go [direction]  - north, south, east, west (Example: go north)'
+            '  go [direction]  - north, south, east, west'
             '  look            - describe room and exits'
             '  search          - search for items in the room'
-            '  take [item]     - pick up an item (Example: take rusty key)'
+            '  take [item]     - pick up an item'
             '  inventory       - your equipment'
-            '  examine [item]  - investigate an item (Example: examine hammer)'
-            '  use [item]      - use an item (Example: use potion)'
-            '  talk [npc]      - talk to an NPC (Example: talk sphinx)'
+            '  examine [item]  - investigate an item'
+            '  use [item]      - use an item'
+            '  talk [npc]      - talk to an NPC'
             '  stats           - your current statistics'
-            '  attack / flee   - combat commands'
             '  help            - display this help'
             '  quit            - exit the game'
             ''
@@ -47,6 +58,22 @@ Object subclass: GameEngine [
         world := World current.
         world player: player.
         activeEnemy := nil.
+        self setupCommandMap.
+    ]
+
+    setupCommandMap [
+        commandMap := Dictionary new.
+        commandMap at: 'quit' put: [ isGameOver := true ].
+        commandMap at: 'help' put: [ self printInstructions ].
+        commandMap at: 'look' put: [ world look ].
+        commandMap at: 'stats' put: [ player displayStats ].
+        commandMap at: 'search' put: [ self handleSearch ].
+        commandMap at: 'inventory' put: [ self handleInventory ].
+        commandMap at: 'go' put: [ :target | self handleGo: target ].
+        commandMap at: 'take' put: [ :target | self handleTake: target ].
+        commandMap at: 'examine' put: [ :target | self handleExamine: target ].
+        commandMap at: 'use' put: [ :target | self handleUse: target ].
+        commandMap at: 'talk' put: [ :target | self handleTalk: target ].
     ]
 
     "Print strings from array in separate lines."
@@ -64,70 +91,61 @@ Object subclass: GameEngine [
     ]
 
     readCommand [
+        | line prompt |
         activeEnemy ifNotNil: [ Transcript cr; show: '--- TURN ', combatTurn printString, ' ---'; cr ].
         activeEnemy ifNil: [ 
-            Transcript show: '> (Examples: look, go north/south, search, examine item, take item, use item, stats, help, quit) ' 
+            prompt := '> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) '.
         ] ifNotNil: [ 
-            Transcript show: 'Choose: attack. | flee. | drink_potion. | help. (Example: attack)'; cr.
-            Transcript show: '[COMBAT] > '
+            prompt := 'Choose: attack | flee | drink_potion | help. [COMBAT] > '.
         ].
-        ^ FileStream stdin nextLine
+        Transcript show: prompt.
+        line := FileStream stdin nextLine.
+        line ifNil: [ isGameOver := true. ^'quit' ].
+        ^ line
     ]
 
     "Character Creation"
     characterCreation [
-        | points choice statsLine |
+        | points choice mapping |
         points := 5.
+        mapping := Dictionary new.
+        #('strength' 'str') do: [ :s | mapping at: s put: 'strength' ].
+        #('dexterity' 'dex') do: [ :s | mapping at: s put: 'dexterity' ].
+        #('intelligence' 'int') do: [ :s | mapping at: s put: 'intelligence' ].
+        #('charisma' 'cha') do: [ :s | mapping at: s put: 'charisma' ].
+        #('endurance' 'end') do: [ :s | mapping at: s put: 'endurance' ].
+
         Transcript show: '*** STEP 1: DEFINE YOUR HERO ***'; cr; cr.
         
-        [ points > 0 ] whileTrue: [
+        [ points > 0 and: [ isGameOver not ] ] whileTrue: [
             Transcript show: '--- CHARACTER DEVELOPMENT ---'; cr.
-            "Format: [STR: 10 | DEX: 10 | INT: 10 | CHA: 10 | END: 10]"
-            statsLine := '[STR: ', (player stats at: 'strength') printString, 
+            Transcript show: '[STR: ', (player stats at: 'strength') printString, 
                          ' | DEX: ', (player stats at: 'dexterity') printString,
                          ' | INT: ', (player stats at: 'intelligence') printString,
                          ' | CHA: ', (player stats at: 'charisma') printString,
-                         ' | END: ', (player stats at: 'endurance') printString, ']'.
-            Transcript show: statsLine; cr.
+                         ' | END: ', (player stats at: 'endurance') printString, ']'; cr.
             Transcript show: 'Points remaining: ', points printString; cr.
-            Transcript show: 'Choose a stat to increase (strength. dexterity. intelligence. charisma. endurance.): '; cr.
-            choice := FileStream stdin nextLine asLowercase.
-            "Clean trailing dot"
-            (choice endsWith: '.') ifTrue: [ choice := choice copyFrom: 1 to: (choice size - 1) ].
+            Transcript show: 'Choose a stat to increase (strength, dexterity, intelligence, charisma, endurance): '.
             
-            ((choice = 'strength') or: [ choice = 'str' ]) ifTrue: [ 
-                player increaseStat: 'strength'. points := points - 1. 
-                Transcript show: '>> Your strength increased to ', (player stats at: 'strength') printString, '!'; cr; cr.
-            ].
-            ((choice = 'dexterity') or: [ choice = 'dex' ]) ifTrue: [ 
-                player increaseStat: 'dexterity'. points := points - 1. 
-                Transcript show: '>> Your dexterity increased to ', (player stats at: 'dexterity') printString, '!'; cr; cr.
-            ].
-            ((choice = 'intelligence') or: [ choice = 'int' ]) ifTrue: [ 
-                player increaseStat: 'intelligence'. points := points - 1. 
-                Transcript show: '>> Your intelligence increased to ', (player stats at: 'intelligence') printString, '!'; cr; cr.
-            ].
-            ((choice = 'charisma') or: [ choice = 'cha' ]) ifTrue: [ 
-                player increaseStat: 'charisma'. points := points - 1. 
-                Transcript show: '>> Your charisma increased to ', (player stats at: 'charisma') printString, '!'; cr; cr.
-            ].
-            ((choice = 'endurance') or: [ choice = 'end' ]) ifTrue: [ 
-                player increaseStat: 'endurance'. points := points - 1. 
-                Transcript show: '>> Your endurance increased to ', (player stats at: 'endurance') printString, '!'; cr; cr.
+            choice := self normalize: FileStream stdin nextLine.
+            isGameOver ifTrue: [ ^self ].
+
+            (mapping includesKey: choice) ifTrue: [
+                | stat |
+                stat := mapping at: choice.
+                player increaseStat: stat.
+                points := points - 1.
+                Transcript show: '>> Your ', stat, ' increased to ', (player stats at: stat) printString, '!'; cr; cr.
+            ] ifFalse: [
+                Transcript show: 'Error: Attribute "', choice, '" not recognized. Please try again.'; cr; cr.
             ].
         ].
-        Transcript show: '*** Your attributes are forged! ***'; cr.
-        statsLine := '[STR: ', (player stats at: 'strength') printString, 
-                     ' | DEX: ', (player stats at: 'dexterity') printString,
-                     ' | INT: ', (player stats at: 'intelligence') printString,
-                     ' | CHA: ', (player stats at: 'charisma') printString,
-                     ' | END: ', (player stats at: 'endurance') printString, ']'.
-        Transcript show: statsLine; cr; cr.
+        Transcript show: '*** Your attributes are forged! ***'; cr; cr.
     ]
 
     "Recruitment"
     recruitment [
-        | count choice comps key |
+        | count choice comps |
         count := 3.
         comps := Dictionary new.
         comps at: 'astarion' put: (Companion name: 'astarion' stat: 'dexterity' value: 5).
@@ -138,29 +156,27 @@ Object subclass: GameEngine [
 
         Transcript show: '*** STEP 2: ASSEMBLE YOUR PARTY ***'; cr; cr.
 
-        [ count > 0 ] whileTrue: [
+        [ count > 0 and: [ isGameOver not ] ] whileTrue: [
             Transcript show: 'Recruiting for slot #', count printString, ':'; cr.
             Transcript show: '--- AVAILABLE COMPANIONS ---'; cr.
             comps keysAndValuesDo: [ :name :val | 
                 Transcript show: '- ', name, ': Provides +', val bonusValue printString, ' bonus to ', val boostedStat, ' checks.'; cr.
             ].
-            Transcript cr.
-            Transcript show: 'Type the name of the companion (e.g., astarion.): '; cr.
-            choice := FileStream stdin nextLine asLowercase.
-            "Clean trailing dot"
-            (choice endsWith: '.') ifTrue: [ choice := choice copyFrom: 1 to: (choice size - 1) ].
+            Transcript cr; show: 'Type the name of the companion (e.g., astarion): '.
+            
+            choice := self normalize: FileStream stdin nextLine.
+            isGameOver ifTrue: [ ^self ].
             
             (comps includesKey: choice) ifTrue: [
                 player companions add: (comps at: choice).
                 comps removeKey: choice.
-                Transcript show: '>> SUCCESS: ', choice, ' has joined! (+', (player companions last bonusValue printString), ' to ', player companions last boostedStat, ')'; cr; cr.
+                Transcript show: '>> SUCCESS: ', choice, ' has joined!'; cr; cr.
                 count := count - 1.
             ] ifFalse: [
-                Transcript show: 'Error: That hero is not available or does not exist.'; cr; cr.
+                Transcript show: 'Error: Companion "', choice, '" is not available.'; cr; cr.
             ].
         ].
         Transcript show: '*** Your party is complete and ready for the House of Hope! ***'; cr; cr.
-        Transcript show: 'Your journey begins now...'; cr; cr.
     ]
 
     "Combat Logic"
@@ -168,43 +184,38 @@ Object subclass: GameEngine [
         aRoom enemies isEmpty ifFalse: [
             activeEnemy := aRoom enemies asArray first.
             combatTurn := 1.
-            Transcript cr; show: '!!! WARNING !!!'; cr.
+            Transcript cr; show: '!!! WARNING !!! (Roll: d20 vs AC)'; cr.
             Transcript show: 'A wild ', activeEnemy name, ' appears in the ', aRoom name asLowercase, '!'; cr; cr.
-            Transcript show: '!!! INITIATIVE !!!'; cr.
             Transcript show: 'You are fighting: ', activeEnemy name; cr.
             Transcript show: activeEnemy description; cr.
         ]
     ]
 
     handleEnemyTurn [
-        | roll ac total dmg reduction |
+        | roll ac dmg enemyHeader |
         activeEnemy ifNil: [ ^self ].
         
         roll := DiceRoller current d20.
         ac := 12 + (player calculateModifier: 'dexterity').
         
-        Transcript show: activeEnemy name, ' attacks! (Roll: ', roll printString, ' vs AC ', ac printString, ')'; cr.
+        enemyHeader := '--- ', activeEnemy name asUppercase, ' ATTACKS ---'.
+        Transcript cr; show: enemyHeader; cr.
         
         (roll >= ac) ifTrue: [
-            dmg := DiceRoller current roll: 6.
-            reduction := player calculateModifier: 'endurance'.
-            dmg := (dmg - reduction) max: 1.
+            dmg := (DiceRoller current roll: 6) - (player calculateModifier: 'endurance').
+            dmg := dmg max: 1.
             player takeDamage: dmg.
-            Transcript show: 'You take ', dmg printString, ' damage (HP: ', player hp printString, ')'; cr.
+            Transcript show: 'You take ', dmg printString, ' damage ', player hpDisplay; cr.
             (player isAlive) ifFalse: [
                 Transcript show: 'YOU DIED... The House of Hope has claimed your soul.'; cr.
                 isGameOver := true.
-                ^self
             ]
-        ] ifFalse: [
-            Transcript show: 'You avoided the attack!'; cr.
-        ].
+        ] ifFalse: [ Transcript show: 'You avoided the attack!'; cr ].
 
-        "Hope Heals (Moved to after enemy attack to avoid 'always 29 HP' confusion)"
         (GameState current hopeFree) ifTrue: [
-            dmg := DiceRoller current roll: 6. dmg := dmg + 2. "3-8 HP"
+            dmg := (DiceRoller current roll: 6) + 2.
             player heal: dmg.
-            Transcript show: 'Hope healed you for ', dmg printString, ' HP! (HP: ', player hp printString, ')'; cr.
+            Transcript cr; show: 'Hope prays for you! Divine light heals you for ', dmg printString, ' HP. ', player hpDisplay; cr.
         ].
     ]
 
@@ -217,10 +228,20 @@ Object subclass: GameEngine [
             damage := DiceRoller current roll: 8.
             (result = #criticalSuccess) ifTrue: [ damage := damage * 2 ].
             activeEnemy takeDamage: damage.
-            Transcript cr; show: 'Hit! You deal ', damage printString, ' damage (Enemy HP: ', activeEnemy hp printString, ')'; cr.
+            Transcript cr; show: 'HIT! ', damage printString, ' dmg. (Enemy HP: ', activeEnemy hp printString, ')'; cr.
             (activeEnemy isAlive) ifFalse: [
-                Transcript show: 'ENEMY DEFEATED!'; cr.
-                world currentRoom enemies remove: activeEnemy.
+                (activeEnemy name sameAs: 'Raphael') ifTrue: [
+                    Transcript cr.
+                    Transcript show: 'Raphael falls to his knees, his golden armor shattered.'; cr.
+                    Transcript show: 'Hope appears by your side, her light blinding the devil.'; cr.
+                    Transcript show: 'Hope: "Begone, Raphael! This house is no longer your prison!"'; cr.
+                    Transcript show: 'Together, you cast him out into the void.'; cr.
+                    Transcript show: '*** YOU HAVE WON THE GAME ***'; cr.
+                    isGameOver := true.
+                ] ifFalse: [
+                    Transcript show: 'ENEMY DEFEATED!'; cr.
+                    world currentRoom enemies remove: activeEnemy.
+                ].
                 activeEnemy := nil.
                 ^true
             ].
@@ -234,14 +255,11 @@ Object subclass: GameEngine [
     handleCombatUsePotion [
         | potion |
         potion := player findItemNamed: 'Potion'.
-        potion ifNil: [ 
-            Transcript show: 'You don''t have any potions left!'; cr.
-            ^false
-        ].
+        potion ifNil: [ Transcript show: 'No potions left!'; cr. ^false ].
         
         player heal: 10.
         player inventory remove: potion.
-        Transcript show: 'You drink a potion... +10 HP (HP: ', player hp printString, ')'; cr.
+        Transcript show: 'You drink a potion... +10 HP ', player hpDisplay; cr.
         
         self handleEnemyTurn.
         combatTurn := combatTurn + 1.
@@ -249,176 +267,183 @@ Object subclass: GameEngine [
     ]
 
     handleFlee [
-        Transcript show: 'You flee back!'; cr.
+        Transcript show: 'You flee back south!'; cr.
         activeEnemy := nil.
         world moveTo: 'south'.
         ^true
+    ]
+
+    handleInventory [
+        Transcript cr; show: '--- YOUR INVENTORY ---'; cr.
+        Transcript show: 'Items:'; cr.
+        player inventory do: [ :i | Transcript show: '* ', i name; cr ].
+        Transcript cr; show: 'Commands: use [item], examine [item], drop [item].'; cr.
     ]
 
     handleSearch [
         | items |
         items := world currentRoom items.
         Transcript cr.
-        items isEmpty ifTrue: [ Transcript show: 'You found nothing of interest.'; cr ]
+        items isEmpty ifTrue: [ Transcript show: 'Nothing found here.'; cr ]
         ifFalse: [
-            Transcript show: 'You found: '; cr.
-            items do: [ :i | Transcript show: '- ', i name; cr ].
+            Transcript show: '>> You found the following items. Use "take [item]" to pick them up.'; cr.
+            items do: [ :i | Transcript show: '- ', i name, ': ', i description; cr ].
         ].
         ^true
+    ]
+
+    handleGo: direction [
+        direction ifNil: [ Transcript show: 'Go where? (Examples: go north, go south)'; cr. ^false ].
+        (world moveTo: direction) ifTrue: [
+            (world currentRoom name = 'Foyer' and: [ GameState current contractTaken ]) ifTrue: [
+                world currentRoom enemies add: (Enemy name: 'Raphael' hp: 100 maxHp: 100 ac: 16 dc: 15 description: 'The lord of this house.').
+            ].
+            self enterCombat: world currentRoom.
+        ].
+    ]
+
+    handleTake: itemName [
+        itemName ifNil: [ Transcript show: 'Take what?'; cr. ^false ].
+        (world currentRoom findItemNamed: itemName) ifNotNil: [ :item |
+            player takeItem: item.
+            world currentRoom removeItem: item.
+            Transcript show: 'You took: ', item name; cr.
+            (item name sameAs: 'Soul Contract') ifTrue: [ 
+                GameState current contractTaken: true. 
+                Transcript show: '*** YOU FEEL RAPHAEL''S GROWING ANGER ***'; cr 
+            ].
+        ] ifNil: [ Transcript show: 'Item "', itemName, '" not found here.'; cr ].
+    ]
+
+    handleExamine: itemName [
+        itemName ifNil: [ Transcript show: 'Examine what?'; cr. ^false ].
+        (player findItemNamed: itemName) ifNotNil: [ :item |
+            Transcript show: item description; cr.
+            (player rollCheck: 'intelligence' against: 12) = #success ifTrue: [ 
+                (item hint notNil and: [ item hint isEmpty not ]) ifTrue: [ Transcript show: 'Hint: ', item hint; cr ].
+            ].
+        ] ifNil: [ Transcript show: 'You don''t have "', itemName, '".'; cr ].
     ]
 
     handleUse: itemName [
         | item |
+        itemName ifNil: [ Transcript show: 'Use what?'; cr. ^false ].
         item := player findItemNamed: itemName.
-        item ifNil: [ Transcript show: 'You do not have that in your inventory.'; cr. ^false ].
+        item ifNil: [ Transcript show: 'Item "', itemName, '" not in inventory.'; cr. ^false ].
         
         (item name sameAs: 'Potion') ifTrue: [
-            player heal: 10.
-            player inventory remove: item.
-            Transcript show: 'You drank the potion. +10 HP.'; cr. ^true
+            player heal: 10. player inventory remove: item.
+            Transcript show: 'Drank potion. +10 HP.'; cr. ^true
         ].
-
         (item name sameAs: 'Incantation') ifTrue: [
             (world currentRoom name = 'Banquet Hall') ifTrue: [
-                Transcript show: 'The Vault barrier disappears!'; cr.
-                GameState current barrierOpen: true.
-                player inventory remove: item. ^true
+                Transcript show: 'Vault barrier disappears!'; cr.
+                GameState current barrierOpen: true. player inventory remove: item. ^true
             ] ifFalse: [ Transcript show: 'Nothing happens.'; cr. ^false ].
         ].
-
         (item name sameAs: 'Orphic Hammer') ifTrue: [
             (world currentRoom name = 'Prison') ifTrue: [
-                Transcript show: 'A MIGHTY BLOW! The chains shatter. Hope is free!'; cr.
+                Transcript show: 'Hope is free!'; cr.
                 GameState current hopeFree: true. ^true
-            ] ifFalse: [ Transcript show: 'There is no one here to free.'; cr. ^false ].
+            ] ifFalse: [ Transcript show: 'No one to free here.'; cr. ^false ].
         ].
-
-        Transcript show: 'You do not know how to use this.'; cr.
-        ^true
+        Transcript show: 'Cannot use this here.'; cr. ^true
     ]
 
     handleTalk: npcName [
         | npc answer |
+        npcName ifNil: [ Transcript show: 'Talk to whom?'; cr. ^false ].
         npc := world currentRoom findNpcNamed: npcName.
-        npc ifNil: [ Transcript show: 'No one here by that name.'; cr. ^false ].
-        
+        npc ifNil: [ Transcript show: 'No one named "', npcName, '" here.'; cr. ^false ].
         Transcript show: npc name, ': ', npc description; cr.
 
         (npc name sameAs: 'Collector') ifTrue: [
             (player findItemNamed: 'Old Coin') ifNotNil: [
-                Transcript show: 'Collector: "Ah! That coin! In exchange, I tell you: The Rusty Key lies in the Kitchen!"'; cr.
-                ^true
+                Transcript show: 'Collector: "Ah! Kitchen has the Rusty Key!"'; cr. ^true
             ].
         ].
-
         npc riddle ifNotNil: [
             Transcript show: 'RIDDLE: ', npc riddle; cr.
-            Transcript show: 'Your answer (Example: promise): '.
-            answer := FileStream stdin nextLine asLowercase.
+            Transcript show: 'Answer: '.
+            answer := self normalize: FileStream stdin nextLine.
+            isGameOver ifTrue: [ ^false ].
+            
             (answer sameAs: npc answer) ifTrue: [
                 Transcript show: 'Correct!'; cr.
                 (npc name sameAs: 'Sphinx') ifTrue: [ Transcript show: 'Sphinx: "Use the hammer to free Hope."'; cr ].
-            ] ifFalse: [
-                Transcript show: 'Wrong! The Sphinx strikes you!'; cr.
-                player takeDamage: 5.
-            ].
+            ] ifFalse: [ Transcript show: 'Wrong! (-5 HP)'; cr. player takeDamage: 5 ].
         ].
         ^true
     ]
 
+    normalize: aString [
+        | clean |
+        aString ifNil: [ isGameOver := true. ^'' ].
+        clean := aString asLowercase trim.
+        (clean endsWith: '.') ifTrue: [ clean := clean copyFrom: 1 to: (clean size - 1) ].
+        ^clean
+    ]
+
+    parseCommand: aString [
+        | cmd parts action target openIdx closeIdx |
+        "Normalize input: lowercase, trim, remove trailing dot"
+        cmd := self normalize: aString.
+        parts := cmd subStrings.
+        parts isEmpty ifTrue: [ ^#('' nil) ].
+        
+        (cmd includes: $() ifTrue: [
+            openIdx := cmd indexOf: $(.
+            closeIdx := cmd indexOf: $).
+            closeIdx = 0 ifTrue: [ closeIdx := cmd size + 1 ].
+            action := (cmd copyFrom: 1 to: (openIdx - 1)) trim.
+            target := (cmd copyFrom: (openIdx + 1) to: (closeIdx - 1)) trim.
+            ^Array with: action with: target
+        ] ifFalse: [
+            action := parts first.
+            parts size > 1 ifTrue: [
+                "Join all remaining parts into a single target string with single spaces"
+                target := (parts copyFrom: 2 to: parts size) inject: '' into: [ :acc :each | 
+                    acc isEmpty ifTrue: [ each ] ifFalse: [ acc, ' ', each ]
+                ].
+            ^Array with: action with: target
+            ].
+        ].
+        ^Array with: action with: nil
+    ]
+
+    handleCombatCommand: action fullCmd: cmd [
+        ((action = 'attack') or: [ cmd sameAs: 'attack' ]) ifTrue: [ self handleAttack. ^true ].
+        ((action = 'flee') or: [ cmd sameAs: 'flee' ]) ifTrue: [ self handleFlee. ^true ].
+        ((action = 'help') or: [ cmd sameAs: 'help' ]) ifTrue: [ self printInstructions. ^true ].
+        (#('drink_potion' 'drinkpotion' 'use potion' 'drink potion') anySatisfy: [ :p | cmd sameAs: p ]) ifTrue: [ self handleCombatUsePotion. ^true ].
+        ^false
+    ]
+
     run [
-        | cmd parts action target cleanCmd |
+        | cmd parse action target block |
         self characterCreation.
+        isGameOver ifTrue: [ ^self ].
+        
         self recruitment.
+        isGameOver ifTrue: [ ^self ].
+
         self printInstructions.
         world look.
 
         [ isGameOver ] whileFalse: [
             cmd := self readCommand.
-            cmd ifNil: [ isGameOver := true ] ifNotNil: [
-                cleanCmd := cmd.
-                parts := cleanCmd subStrings.
-                parts isEmpty ifTrue: [ action := ''. target := nil ] ifFalse: [
-                    "Check for parentheses"
-                    (cleanCmd includes: $() ifTrue: [
-                        | openIdx closeIdx |
-                        openIdx := cleanCmd indexOf: $(.
-                        closeIdx := cleanCmd indexOf: $).
-                        closeIdx = 0 ifTrue: [ closeIdx := cleanCmd size + 1 ].
-                        action := (cleanCmd copyFrom: 1 to: (openIdx - 1)) asLowercase.
-                        target := (cleanCmd copyFrom: (openIdx + 1) to: (closeIdx - 1)) asLowercase.
-                        "Remove trailing dot from target"
-                        (target endsWith: '.') ifTrue: [ target := target copyFrom: 1 to: (target size - 1) ].
-                    ] ifFalse: [
-                        action := parts first asLowercase.
-                        (action endsWith: '.') ifTrue: [ action := action copyFrom: 1 to: (action size - 1) ].
-                        parts size > 1 ifTrue: [
-                            target := ''.
-                            2 to: parts size do: [ :i |
-                                target := target, (parts at: i).
-                                (i < parts size) ifTrue: [ target := target, ' ' ].
-                            ].
-                            target := target asLowercase.
-                            (target endsWith: '.') ifTrue: [ target := target copyFrom: 1 to: (target size - 1) ].
-                        ] ifFalse: [ target := nil ].
-                    ].
-                ].
-                
+            isGameOver ifFalse: [
                 activeEnemy ifNil: [
-                    (action = 'quit') ifTrue: [ isGameOver := true ].
-                    (action = 'help') ifTrue: [ self printInstructions ].
-                    (action = 'look') ifTrue: [ Transcript cr. world look ].
-                    (action = 'stats') ifTrue: [ player displayStats ].
-                    (action = 'search') ifTrue: [ self handleSearch ].
-                    (action = 'inventory') ifTrue: [
-                        Transcript cr; show: '--- YOUR INVENTORY ---'; cr.
-                        Transcript show: 'You are carrying:'; cr.
-                        player inventory do: [ :i | Transcript show: '* ', i name; cr ].
-                        Transcript cr.
-                        Transcript show: 'Commands: use [item]. examine [item]. drop [item].'; cr.
-                    ].
-                    (action = 'go') ifTrue: [
-                        target ifNotNil: [
-                            (world moveTo: target) ifTrue: [
-                                (world currentRoom name = 'Foyer' and: [ GameState current contractTaken ]) ifTrue: [
-                                    world currentRoom enemies add: (Enemy name: 'Raphael' hp: 100 maxHp: 100 ac: 16 dc: 15 description: 'The lord of this house. He is furious.').
-                                ].
-                                self enterCombat: world currentRoom.
-                            ].
-                        ] ifNil: [ Transcript show: 'Where to?'; cr ].
-                    ].
-                    (action = 'take') ifTrue: [
-                        target ifNotNil: [
-                            (world currentRoom findItemNamed: target) ifNotNil: [ :item |
-                                player takeItem: item. world currentRoom removeItem: item.
-                                Transcript show: 'You took: ', item name; cr.
-                                (item name sameAs: 'Soul Contract') ifTrue: [ GameState current contractTaken: true. Transcript show: '*** YOU FEEL RAPHAEL''S GROWING ANGER ***'; cr ].
-                            ] ifNil: [ Transcript show: 'You do not see that here.'; cr ].
-                        ] ifNil: [ Transcript show: 'What do you want to take?'; cr ].
-                    ].
-                    (action = 'examine') ifTrue: [
-                        target ifNotNil: [
-                            (player findItemNamed: target) ifNotNil: [ :item |
-                                Transcript show: item description; cr.
-                                (player rollCheck: 'intelligence' against: 12) = #success ifTrue: [ 
-                                    (item hint notNil and: [ item hint isEmpty not ]) ifTrue: [ 
-                                        Transcript show: 'Hint: ', item hint; cr 
-                                    ] ifFalse: [ 
-                                        Transcript show: 'You don''t find any hidden clues about this item.'; cr 
-                                    ].
-                                ].
-                            ] ifNil: [ Transcript show: 'You do not have that.'; cr ].
-                        ] ifNil: [ Transcript show: 'What do you want to examine?'; cr ].
-                    ].
-                    (action = 'use') ifTrue: [ target ifNotNil: [ self handleUse: target ] ifNil: [ Transcript show: 'What do you want to use?'; cr ] ].
-                    (action = 'talk') ifTrue: [ target ifNotNil: [ self handleTalk: target ] ifNil: [ Transcript show: 'Who do you want to talk to?'; cr ] ].
+                    parse := self parseCommand: cmd.
+                    action := parse first. target := parse second.
+                    block := commandMap at: action ifAbsent: [ nil ].
+                    block ifNotNil: [
+                        block numArgs = 0 ifTrue: [ block value ] ifFalse: [ block value: target ].
+                    ] ifNil: [ Transcript show: 'Unknown command. Type "help" for list.'; cr ].
                 ] ifNotNil: [
-                    ((action = 'attack') or: [ cleanCmd sameAs: 'attack' ]) ifTrue: [ self handleAttack ].
-                    ((action = 'flee') or: [ cleanCmd sameAs: 'flee' ]) ifTrue: [ self handleFlee ].
-                    ((action = 'help') or: [ cleanCmd sameAs: 'help' ]) ifTrue: [ self printInstructions ].
-                    ((action = 'drink_potion') or: [ (action = 'drinkpotion') or: [ (cleanCmd sameAs: 'drink potion') or: [ cleanCmd sameAs: 'use potion' ] ] ]) ifTrue: [ self handleCombatUsePotion ].
-                ].
-            ].
+                    self handleCombatCommand: (self normalize: cmd) fullCmd: (self normalize: cmd).
+                ]
+            ]
         ].
         Transcript cr; show: 'Thanks for playing!'; cr.
     ]
