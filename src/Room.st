@@ -54,7 +54,13 @@ Object subclass: Room [
     describe [
         Transcript cr; show: 'Current position: ', name; cr.
         Transcript show: '--- LOCATION DESCRIPTION ---'; cr.
-        Transcript show: description; cr; cr.
+        (name sameAs: 'Prison') ifTrue: [
+            (GameState current hopeFree) ifTrue: [
+                Transcript show: 'The Prison. The heavy chains lie shattered on the floor.'; cr.
+                Transcript show: 'Hope is standing here, looking at the ceiling with a smile.'; cr.
+            ] ifFalse: [ Transcript show: description; cr ].
+        ] ifFalse: [ Transcript show: description; cr ].
+        Transcript cr.
         
         npcs do: [ :npc | 
             Transcript show: '>> You see someone here: ', npc name, '. (Type: talk ', npc name, ')'; cr.
