@@ -131,7 +131,40 @@ Object subclass: World [
         nextRoom ifNil: [ Transcript show: 'Error: Cannot go that way.'; cr. ^false ].
         
         (nextRoom name = 'Vault' and: [ GameState current barrierOpen not ]) ifTrue: [
-            Transcript show: 'Vault is protected by a magical barrier. Need Incantation.'; cr. ^false
+            | scroll |
+            scroll := player findItemNamed: 'Incantation'.
+            scroll ifNotNil: [
+                GameState current barrierOpen: true.
+                player inventory remove: scroll.
+                Transcript show: 'You read the mysterious scroll aloud...'; cr.
+                Transcript show: 'The Vault door shimmers and vanishes!'; cr.
+            ] ifNil: [
+                Transcript show: 'Vault is protected by a magical barrier. Need Incantation.'; cr. ^false
+            ].
+        ].
+
+        (nextRoom name = 'Prison' and: [ GameState current prisonOpen not ]) ifTrue: [
+            | choice result |
+            Transcript show: 'A heavy iron grate blocks the way to the Prison.'; cr.
+            Transcript show: 'How do you want to open it? (force / lockpick): '.
+            choice := (FileStream stdin nextLine) trim asLowercase.
+            (choice sameAs: 'force') ifTrue: [
+                result := player rollCheck: 'strength' against: 16.
+                (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
+                    GameState current prisonOpen: true.
+                    Transcript show: 'You rip the grate from its hinges!'; cr.
+                ] ifFalse: [ ^false ].
+            ] ifFalse: [
+                (choice sameAs: 'lockpick') ifTrue: [
+                    result := player rollCheck: 'dexterity' against: 14.
+                    (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
+                        GameState current prisonOpen: true.
+                        Transcript show: 'You expertly pick the lock of the grate.'; cr.
+                    ] ifFalse: [ ^false ].
+                ] ifFalse: [
+                    Transcript show: 'Invalid choice. The grate remains closed.'; cr. ^false
+                ].
+            ].
         ].
         
         (nextRoom name = 'Secret Tunnel' and: [ GameState current secretTunnelOpen not ]) ifTrue: [
