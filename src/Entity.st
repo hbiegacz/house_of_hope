@@ -37,4 +37,9 @@ Object subclass: Entity [
     heal: anAmount [
         hp := (hp + anAmount) min: maxHp.
     ]
+
+    increaseMaxHp: anAmount [
+        maxHp := maxHp + anAmount.
+        hp := hp + anAmount.
+    ]
 ]

@@ -182,9 +182,11 @@ Object subclass: GameEngine [
             isGameOver ifTrue: [ ^self ].
             
             (comps includesKey: choice) ifTrue: [
-                player companions add: (comps at: choice).
+                | comp |
+                comp := comps at: choice.
+                player companions add: comp.
                 comps removeKey: choice.
-                Transcript show: '>> SUCCESS: ', choice, ' has joined!'; cr; cr.
+                Transcript show: '>> SUCCESS: ', choice, ' has joined! (+', comp bonusValue printString, ' to ', comp boostedStat, ')'; cr; cr.
                 count := count - 1.
             ] ifFalse: [
                 (choice isEmpty) ifFalse: [
@@ -420,9 +422,16 @@ Object subclass: GameEngine [
         ].
         (item name sameAs: 'Orphic Hammer') ifTrue: [
             (world currentRoom name = 'Prison') ifTrue: [
-                Transcript show: 'Hope is free!'; cr.
+                (GameState current hopeFree) ifTrue: [
+                    Transcript show: 'Hope is already free.'; cr. ^true
+                ].
+                Transcript show: 'You raise the Orphic Hammer high above your head...'; cr.
+                Transcript show: 'WITH A THUNDEROUS CRACK, the magical chains shatter into dust!'; cr.
+                Transcript show: 'Hope: "I can breathe! I am free! Thank you, mortal!"'; cr.
+                Transcript show: '>> REWARD: Hope gives you a Divine Blessing (+5 Max HP)!'; cr.
+                player increaseMaxHp: 5.
                 GameState current hopeFree: true. ^true
-            ] ifFalse: [ Transcript show: 'No one to free here.'; cr. ^false ].
+            ] ifFalse: [ Transcript show: 'No one to free here, or she is already free.'; cr. ^false ].
         ].
         Transcript show: 'Cannot use this here.'; cr. ^true
     ]
@@ -435,21 +444,51 @@ Object subclass: GameEngine [
         Transcript show: npc name, ': ', npc description; cr.
 
         (npc name sameAs: 'Collector') ifTrue: [
-            (player findItemNamed: 'Old Coin') ifNotNil: [
-                Transcript show: 'Collector: "Ah! Kitchen has the Rusty Key!"'; cr. ^true
+            (player findItemNamed: 'Old Coin') ifNotNil: [ :coin |
+                Transcript show: 'Collector: "I see a glimmer of gold in your pocket... is that an Old Coin?"'; cr.
+                Transcript show: 'Give him the coin? (yes/no): '.
+                answer := self normalize: FileStream stdin nextLine.
+                (answer sameAs: 'yes') ifTrue: [
+                    player inventory remove: coin.
+                    Transcript show: 'Collector: "A fine addition! Listen closely: the Rusty Key to the Secret Tunnel..."'; cr.
+                    Transcript show: 'Collector: "...is hidden among the iron pots in the Kitchen. Search it well."'; cr.
+                    ^true
+                ] ifFalse: [
+                    Transcript show: 'Collector: "Suit yourself. Gold is useless to the dead."'; cr.
+                    ^true
+                ].
+            ] ifNil: [
+                Transcript show: 'Collector: "I only speak to those who carry the currency of the past."'; cr.
+                ^true
             ].
         ].
-        npc riddle ifNotNil: [
-            Transcript show: 'RIDDLE: ', npc riddle; cr.
+
+        (npc riddle notNil) ifTrue: [
+            (GameState current riddleSolved) ifTrue: [
+                Transcript show: 'The ', npc name, ' bows: "You have already proven your wit, mortal."'; cr.
+                ^true
+            ].
+            Transcript show: 'Sphinx: "I have a riddle. Answer, and I grant you knowledge. Fail, and I take your life-blood."'; cr.
+            Transcript show: 'Sphinx: "', npc riddle, '"'; cr.
+            Transcript show: '(Type your answer, e.g. promise)'; cr.
             Transcript show: 'Answer: '.
             answer := self normalize: FileStream stdin nextLine.
             isGameOver ifTrue: [ ^false ].
             
             (answer sameAs: npc answer) ifTrue: [
-                Transcript show: 'Correct!'; cr.
-                (npc name sameAs: 'Sphinx') ifTrue: [ Transcript show: 'Sphinx: "Use the hammer to free Hope."'; cr ].
-            ] ifFalse: [ Transcript show: 'Wrong! (-5 HP)'; cr. player takeDamage: 5 ].
+                Transcript show: 'Sphinx: "Correct. A promise is easily broken."'; cr.
+                Transcript show: 'Sphinx: "Knowledge for you: Beneath the Prison lies Hope. She is under chains."'; cr.
+                Transcript show: 'Sphinx: "Only the Orphic Hammer from the Vault can set her free."'; cr.
+                GameState current riddleSolved: true.
+            ] ifFalse: [
+                Transcript show: 'Sphinx: "WRONG! I shall taste your essence!"'; cr.
+                player takeDamage: 5.
+                Transcript show: '>> You lost 5 HP. ', player hpDisplay, '. Your blood fills a vial for the Sphinx.'; cr.
+            ].
+            ^true
         ].
+        
+        Transcript show: 'You start a conversation with ', npc name, ', but they have nothing more to say.'; cr.
         ^true
     ]
 
