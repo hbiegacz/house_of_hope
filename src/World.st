@@ -85,6 +85,9 @@ Object subclass: World [
         collector := NPC name: 'Collector' description: 'A small devil obsessive about collections.'.
         servant addNpc: collector.
         servant enemies add: (Enemy name: 'Imp' hp: 15 maxHp: 15 ac: 12 dc: 10 description: 'A small, annoying flying devil.').
+
+        (rooms at: 'Banquet Hall') enemies add: (Enemy name: 'Imp' hp: 15 maxHp: 15 ac: 12 dc: 10 description: 'A small, annoying flying devil.').
+        (rooms at: 'Vault') enemies add: (Enemy name: 'Cambion' hp: 40 maxHp: 40 ac: 14 dc: 14 description: 'A powerful demonic warrior.').
     ]
 
     setupConnections [
