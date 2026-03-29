@@ -224,9 +224,9 @@ Object subclass: GameEngine [
         (roll >= ac or: [ roll = 20 ]) ifTrue: [
             | baseDmg bonus |
             (roll = 20) ifTrue: [ 
-                baseDmg := (DiceRoller current roll: 3 to: 8) * 2.
+                baseDmg := (DiceRoller current roll: 3 to: 7) * 2.
             ] ifFalse: [
-                baseDmg := DiceRoller current roll: 3 to: 8.
+                baseDmg := DiceRoller current roll: 3 to: 7.
             ].
             bonus := player calculateModifier: 'endurance'.
             dmg := (baseDmg - bonus) max: 1.
@@ -269,9 +269,9 @@ Object subclass: GameEngine [
         
         (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
             (result = #criticalSuccess) ifTrue: [ 
-                damage := (player stats at: 'strength').
+                damage := (DiceRoller current roll: 4 to: 11) * 2.
             ] ifFalse: [
-                damage := DiceRoller current roll: 8.
+                damage := DiceRoller current roll: 4 to: 11.
             ].
             activeEnemy takeDamage: damage.
             
