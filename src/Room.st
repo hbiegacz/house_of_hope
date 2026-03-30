@@ -1,4 +1,4 @@
-"Room class - Represents a location in the game world."
+"Room class - This represents a single location on the map. It holds enemies, items, and NPCs."
 
 Object subclass: Room [
     | name description neighbors items npcs enemies |

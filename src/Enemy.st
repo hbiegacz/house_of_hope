@@ -1,4 +1,4 @@
-"Enemy class - Represents hostile entities in the world."
+"Enemy class - This represents the monsters and enemies you fight in the game."
 
 Entity subclass: Enemy [
     | attackDc armorClass description |
@@ -20,7 +20,6 @@ Entity subclass: Enemy [
     description [ ^description ]
     description: aString [ description := aString ]
     
-    "For debugging"
     printOn: aStream [
         aStream nextPutAll: name.
         aStream nextPutAll: ' (HP: '.

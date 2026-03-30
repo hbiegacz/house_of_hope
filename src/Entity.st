@@ -1,4 +1,4 @@
-"Entity class - Base class for all living things in the game."
+"Entity class - This is the basic template for all living things (players, monsters). It stores HP and name."
 
 Object subclass: Entity [
     | name hp maxHp |

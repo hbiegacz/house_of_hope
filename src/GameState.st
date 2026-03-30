@@ -1,4 +1,4 @@
-"GameState class - Singleton managing game flags and state."
+"GameState class - This remembers game progress, like if a door is unlocked, a puzzle is solved or is Hope freed."
 
 Object subclass: GameState [
     | barrierOpen prisonOpen hopeFree riddleSolved contractTaken secretTunnelOpen |

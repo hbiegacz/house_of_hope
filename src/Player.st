@@ -1,4 +1,4 @@
-"Player class - Represents the main character in the House of Hope."
+"Player class -  Represents the main character in the House of Hope. It stores stats, backpack inventory and companions."
 
 Entity subclass: Player [
     | stats inventory companions |

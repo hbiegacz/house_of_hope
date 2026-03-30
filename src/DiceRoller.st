@@ -1,4 +1,4 @@
-"DiceRoller class - Singleton for standard game rolls."
+"DiceRoller class - This handles random dice rolls for attacks and skill checks."
 
 Object subclass: DiceRoller [
     

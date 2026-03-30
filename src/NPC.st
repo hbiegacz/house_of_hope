@@ -1,4 +1,4 @@
-"NPC class - Characters to interact with."
+"NPC class - This represents characters players can talk to. They give hints or ask riddles."
 
 Object subclass: NPC [
     | name description dialogue riddle answer |

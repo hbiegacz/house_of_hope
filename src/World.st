@@ -1,4 +1,4 @@
-"World class - Singleton managing the game map and progression."
+"World class - This builds and connects the whole map. It controls moving the player from room to room."
 
 Object subclass: World [
     | rooms currentRoom previousRoom player |

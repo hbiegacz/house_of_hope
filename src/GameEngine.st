@@ -10,11 +10,11 @@ String extend [
     ]
 ]
 
-"GameEngine class
+"GameEngine class  - This is the heart of the game.
 Responsibilities:
 * handle game loop
 * character creation and recruitment
-* command parser
+* read player commands
 * main coordinator for World and Player"
 
 Object subclass: GameEngine [

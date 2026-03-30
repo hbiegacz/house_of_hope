@@ -1,4 +1,4 @@
-"Item class - Objects that can be carried or used."
+"Item class - This defines the things players can find, pick up, and use (like potions and keys)."
 
 Object subclass: Item [
     | name description hint |

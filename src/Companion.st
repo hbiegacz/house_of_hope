@@ -1,4 +1,4 @@
-"Companion class - Allies providing stat boosts."
+"Companion class - This represents your friends in the game who give you bonus stats."
 
 Object subclass: Companion [
     | name boostedStat bonusValue |
