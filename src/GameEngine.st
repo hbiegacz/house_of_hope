@@ -1,5 +1,6 @@
-"String extension for cleaning up input."
+"String extension - Adds utility methods to the built-in String class"
 String extend [
+    " Removes leading and trailing whitespace from the string "
     trim [
         | start end |
         start := 1.
@@ -287,6 +288,7 @@ Object subclass: GameEngine [
 
     " --- EXPLORATION & WORLD INTERACTION --- "
 
+    " Handles the 'go' command to move between rooms "
     handleGo: direction [
         direction ifNil: [ Transcript show: 'Go where? (Examples: go north, go south)'; cr. ^false ].
         (world moveTo: direction) ifTrue: [
@@ -297,6 +299,7 @@ Object subclass: GameEngine [
         ].
     ]
 
+    " Handles the 'search' command to look for items in the current room "
     handleSearch [
         | items |
         items := world currentRoom items.
@@ -309,6 +312,7 @@ Object subclass: GameEngine [
         ^true
     ]
 
+    " Handles the 'take' command to pick up an item from the room "
     handleTake: itemName [
         itemName ifNil: [ Transcript show: 'Take what?'; cr. ^false ].
         (world currentRoom findItemNamed: itemName) ifNotNil: [ :item |
@@ -322,6 +326,7 @@ Object subclass: GameEngine [
         ] ifNil: [ Transcript show: 'Item "', itemName, '" not found here.'; cr ].
     ]
 
+    " Handles the 'examine' command to inspect an item closely "
     handleExamine: itemName [
         | result |
         itemName ifNil: [ Transcript show: 'Examine what?'; cr. ^false ].
@@ -334,6 +339,7 @@ Object subclass: GameEngine [
         ] ifNil: [ Transcript show: 'You don''t have "', itemName, '".'; cr ].
     ]
 
+    " Handles the 'use' command to activate or consume an item "
     handleUse: itemName [
         | item |
         itemName ifNil: [ Transcript show: 'Use what?'; cr. ^false ].
@@ -383,6 +389,7 @@ Object subclass: GameEngine [
         Transcript show: 'Cannot use this here.'; cr. ^true
     ]
 
+    " Handles the 'talk' command to initiate dialogue with an NPC "
     handleTalk: npcName [
         | npc answer |
         npcName ifNil: [ Transcript show: 'Talk to whom?'; cr. ^false ].
@@ -438,6 +445,7 @@ Object subclass: GameEngine [
         ^true
     ]
 
+    " Handles the 'inventory' command to list items currently carried by the player "
     handleInventory [
         Transcript cr; show: '--- YOUR INVENTORY ---'; cr.
         Transcript show: 'Items:'; cr.
@@ -590,16 +598,18 @@ Object subclass: GameEngine [
 
     " --- UI & UTILITIES --- "
 
+    " Prints the game's introduction text to the Transcript "
     printIntroduction [
        self printLines: introductionText.
     ]
 
+    " Prints the game's instructions and available commands "
     printInstructions [
         Transcript cr.
         self printLines: instructionsText.
     ]
 
-    " Print strings from array in separate lines "
+    " Helper to print a collection of strings line by line "
     printLines: anArray [
         anArray do: [ :string | Transcript show: string; cr ]
     ]

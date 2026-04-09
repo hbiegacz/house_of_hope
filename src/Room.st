@@ -1,8 +1,8 @@
-"Room class - This represents a single location on the map. It holds enemies, items, and NPCs."
-
+"Room class - Represents a location in the game world, containing items, NPCs, and enemies."
 Object subclass: Room [
     | name description neighbors items npcs enemies |
 
+    " Creates a new room with a name and description "
     Room class >> name: aName description: aDescription [
         | r |
         r := self new.
@@ -10,6 +10,7 @@ Object subclass: Room [
         ^r
     ]
 
+    " Initializes the room's collections for neighbors, items, NPCs, and enemies "
     initRoom [
         neighbors := Dictionary new.
         items := OrderedCollection new.
@@ -17,42 +18,58 @@ Object subclass: Room [
         enemies := OrderedCollection new.
     ]
 
-    "Accessors"
+    " the name of the room "
     name [ ^name ]
     name: aString [ name := aString ]
 
+    " the text description of the room "
     description [ ^description ]
     description: aString [ description := aString ]
 
+    " the dictionary of neighboring rooms "
     neighbors [ ^neighbors ]
+
+    " the collection of items currently in the room "
     items [ ^items ]
+
+    " the collection of NPCs currently in the room "
     npcs [ ^npcs ]
+
+    " the collection of enemies currently in the room "
     enemies [ ^enemies ]
 
-    addNpc: anNpc [ npcs add: anNpc ]
-    
-    findNpcNamed: aString [
-        ^npcs detect: [ :n | n name sameAs: aString ] ifNone: [ nil ]
-    ]
-
+    " Links this room to another room in a specific direction "
     addNeighbor: aRoom direction: aDirection [
         neighbors at: aDirection put: aRoom.
     ]
 
+    " Returns the room located in the specified direction, or nil if none "
     getExit: aDirection [
         ^neighbors at: aDirection ifAbsent: [ nil ]
     ]
 
+    " Adds an NPC to the room "
+    addNpc: anNpc [ npcs add: anNpc ]
+    
+    " Finds and returns an NPC by name, or nil if not found "
+    findNpcNamed: aString [
+        ^npcs detect: [ :n | n name sameAs: aString ] ifNone: [ nil ]
+    ]
+
+    " Adds an item to the room "
     addItem: anItem [ items add: anItem. ]
+
+    " Removes a specific item from the room "
     removeItem: anItem [
         items remove: anItem ifAbsent: [ Transcript show: 'No such item here.'; cr ].
     ]
     
+    " Finds and returns an item by name, or nil if not found "
     findItemNamed: aString [
         ^items detect: [ :item | item name sameAs: aString ] ifNone: [ nil ]
     ]
 
-    " Describes rooms, their NPCs and items. Handles special Prison descriptions (before/after freeing Hope) "
+    " Prints the room's description, occupants, and available exits to the Transcript "
     describe [
         Transcript cr; show: 'Current position: ', name; cr.
         Transcript show: '--- LOCATION DESCRIPTION ---'; cr.

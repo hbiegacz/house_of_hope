@@ -1,5 +1,4 @@
-"World class - This builds and connects the whole map. It controls moving the player from room to room."
-
+"World class - Manages the game world, including room connections and player movement."
 Object subclass: World [
     | rooms currentRoom previousRoom player |
     
@@ -7,6 +6,7 @@ Object subclass: World [
         | currentInstance |
     ]
     
+    " Returns the singleton instance of the World, initializing it if necessary "
     World class >> current [
         currentInstance ifNil: [ 
             currentInstance := self new. 
@@ -15,19 +15,13 @@ Object subclass: World [
         ^currentInstance
     ]
     
-    " Creates rooms, sets up connections between them, places items, NPCs and Enemies" 
+    " Initializes the world with an empty room dictionary and sets up the map "
     initWorld [  
         rooms := Dictionary new.
         self setupMap.
     ]
-    
-    player [ ^player ]
-    player: aPlayer [ player := aPlayer ]
-    
-    currentRoom [ ^currentRoom ]
-    currentRoom: aRoom [ currentRoom := aRoom ]
-    
 
+    " Coordinates the complete setup of the game world "
     setupMap [
         self setupRooms.
         self setupItems.
@@ -36,6 +30,17 @@ Object subclass: World [
         currentRoom := rooms at: 'Foyer'.
     ]
 
+    " the player currently navigating the world "
+    player [ ^player ]
+    player: aPlayer [ player := aPlayer ]
+    
+    " the current room where the player is located "
+    currentRoom [ ^currentRoom ]
+    currentRoom: aRoom [ currentRoom := aRoom ]
+
+    " --- Setup Methods --- "
+
+    " Creates all room instances and adds them to the rooms dictionary "
     setupRooms [
         rooms at: 'Foyer' put: (Room name: 'Foyer' description: 'The central hub of the House of Hope. Gilded mirrors line the walls, reflecting a haunted version of yourself.').
         rooms at: 'Banquet Hall' put: (Room name: 'Banquet Hall' description: 'A vast dining hall. A table overflows with rotting, magical delicacies.').
@@ -48,6 +53,7 @@ Object subclass: World [
         rooms at: 'Secret Tunnel' put: (Room name: 'Secret Tunnel' description: 'A narrow, damp passage smelling of mildew and secrets.').
     ]
 
+    " Populates the rooms with items "
     setupItems [
         | banquet boudoir vault foyer kitchen |
         banquet := rooms at: 'Banquet Hall'.
@@ -74,6 +80,8 @@ Object subclass: World [
         kitchen addItem: ((Item name: 'Rusty Key' description: 'A heavy iron key.')
             hint: 'Unlocks the Secret Tunnel between Vault and Garden.').
     ]
+
+    " Populates the rooms with non-player characters and hostiles "
     setupNpcsAndEnemies [
         | garden servant sphinx collector |
         garden := rooms at: 'Garden'.
@@ -91,12 +99,13 @@ Object subclass: World [
         (rooms at: 'Vault') enemies add: (Enemy name: 'Cambion' hp: 40 maxHp: 40 ac: 14 dc: 14 description: 'A powerful demonic warrior.').
     ]
 
+    " Establishes the directional links between rooms on the map "
     setupConnections [
         | foyer banquet vault prison garden servant kitchen boudoir secretTunnel |
         foyer := rooms at: 'Foyer'. banquet := rooms at: 'Banquet Hall'. vault := rooms at: 'Vault'.
         prison := rooms at: 'Prison'. garden := rooms at: 'Garden'. servant := rooms at: 'Servant Quarters'.
         kitchen := rooms at: 'Kitchen'. boudoir := rooms at: 'Boudoir'. secretTunnel := rooms at: 'Secret Tunnel'.
-
+        
         foyer addNeighbor: banquet direction: 'north'; addNeighbor: prison direction: 'south'; addNeighbor: servant direction: 'west'; addNeighbor: boudoir direction: 'east'.
         banquet addNeighbor: foyer direction: 'south'; addNeighbor: vault direction: 'north'; addNeighbor: garden direction: 'east'; addNeighbor: kitchen direction: 'west'.
         vault addNeighbor: banquet direction: 'south'; addNeighbor: secretTunnel direction: 'east'.
@@ -108,25 +117,9 @@ Object subclass: World [
         secretTunnel addNeighbor: vault direction: 'west'; addNeighbor: garden direction: 'south'.
     ]
 
-    "Map display"
-    printMap [
-        Transcript cr; show: '        --- HOUSE OF HOPE MAP ---'; cr.
-        (GameState current secretTunnelOpen) ifTrue: [
-            Transcript show: '                   [ Vault ] <---> [ Secret Tunnel ]'; cr.
-            Transcript show: '                       ^                    |'; cr.
-        ] ifFalse: [
-            Transcript show: '                   [ Vault ]'; cr.
-            Transcript show: '                       ^'; cr.
-        ].
-        Transcript show: ' [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]'; cr.
-        Transcript show: '     ^           (      ^       )         ^'; cr.
-        Transcript show: ' [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]'; cr.
-        Transcript show: '                 (      ^       ) '; cr.
-        Transcript show: '                 [    Prison    ]'; cr; cr.
-    ]
+    " --- Navigation --- "
 
-    " (if possible) moves the player to the next room. Updates current and previous room variables. "
-    " Handles special room actions (unlocking secret tunnel/prison) or conditions (incantation in inventory for vault)."
+    " Attempts to move the player in the specified direction, handling any obstacles or puzzles "
     moveTo: aDirection [
         | nextRoom |
         nextRoom := currentRoom getExit: aDirection.
@@ -198,7 +191,7 @@ Object subclass: World [
         ^true
     ]
     
-    " If player decides to flee, they are moved back to the previous room they were "
+    " Returns the player to the previous room during a retreat from combat "
     fleeBack [
         previousRoom ifNotNil: [
             currentRoom := previousRoom.
@@ -210,10 +203,29 @@ Object subclass: World [
         Transcript show: 'Nowhere to run!'; cr.
         ^false
     ]
-    
-    " display map & room description "
+
+    " Triggers the display of the map and the current room's description "
     look [
         self printMap.
         currentRoom describe.
     ]
+
+    " Prints an ASCII map representing the current state of the game world "
+    printMap [
+        Transcript cr; show: '        --- HOUSE OF HOPE MAP ---'; cr.
+        (GameState current secretTunnelOpen) ifTrue: [
+            Transcript show: '                   [ Vault ] <---> [ Secret Tunnel ]'; cr.
+            Transcript show: '                       ^                    |'; cr.
+        ] ifFalse: [
+            Transcript show: '                   [ Vault ]'; cr.
+            Transcript show: '                       ^'; cr.
+        ].
+        Transcript show: ' [ Kitchen ] <-> [ Banquet Hall ] <---> [ Garden ]'; cr.
+        Transcript show: '     ^           (      ^       )         ^'; cr.
+        Transcript show: ' [ Servant ] <-> [    Foyer     ] <---> [ Boudoir ]'; cr.
+        Transcript show: '                 (      ^       ) '; cr.
+        Transcript show: '                 [    Prison    ]'; cr; cr.
+    ]
+    
+    
 ]

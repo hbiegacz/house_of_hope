@@ -1,27 +1,27 @@
-"DiceRoller class - This handles random dice rolls for attacks and skill checks."
-
+"DiceRoller class - Handles random number generation for dice rolls."
 Object subclass: DiceRoller [
     
     DiceRoller class [
         | currentInstance |
     ]
 
+    " Returns the instance of the DiceRoller "
     DiceRoller class >> current [
         currentInstance ifNil: [ currentInstance := self new ].
         ^currentInstance
     ]
 
-    "Standard d20 roll"
+    " Performs a standard 20-sided dice roll "
     d20 [
         ^ (1 to: 20) atRandom
     ]
 
-    "General roll"
+    " Returns a random number between 1 and the specified maximum value "
     roll: max [
         ^ (1 to: max) atRandom
     ]
 
-    "Roll in range"
+    " Returns a random number within the specified inclusive range [min, max] "
     roll: min to: max [
         ^ (min to: max) atRandom
     ]
