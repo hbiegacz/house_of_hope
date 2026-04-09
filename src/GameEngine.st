@@ -79,7 +79,8 @@ Object subclass: GameEngine [
         self recruitment.
         isGameOver ifTrue: [ ^self ].
 
-        self printInstructions.
+        self printInstructions.       
+        self printIntroduction.
         world look.
 
         [ isGameOver ] whileFalse: [
