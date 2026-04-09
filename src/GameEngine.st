@@ -73,7 +73,7 @@ Object subclass: GameEngine [
 
     " Main game entry point "
     run [
-        | cmd parse action target block |
+        | cmd |
         self characterCreation.
         isGameOver ifTrue: [ ^self ].
         
@@ -86,22 +86,7 @@ Object subclass: GameEngine [
 
         [ isGameOver ] whileFalse: [
             cmd := self readCommand.
-            isGameOver ifFalse: [
-                activeEnemy ifNil: [
-                    parse := self parseCommand: cmd.
-                    action := parse first. target := parse second.
-                    block := commandMap at: action ifAbsent: [ nil ].
-                    block ifNotNil: [
-                        block numArgs = 0 ifTrue: [ block value ] ifFalse: [ block value: target ].
-                    ] ifNil: [ 
-                        (action isEmpty) ifFalse: [
-                            Transcript show: 'Unknown command. Type "help" for list.'; cr 
-                        ].
-                    ].
-                ] ifNotNil: [
-                    self handleCombatCommand: (self normalize: cmd) fullCmd: (self normalize: cmd).
-                ]
-            ]
+            isGameOver ifFalse: [ self executeCommand: cmd ].
         ].
         Transcript cr; show: 'Thanks for playing!'; cr.
     ]
@@ -208,6 +193,25 @@ Object subclass: GameEngine [
     ]
 
     " --- COMMAND HANDLING & PARSING --- "
+
+    " Decides whether to process a normal or combat-related command "
+    executeCommand: cmd [
+        | parse action target block |
+        activeEnemy ifNil: [
+            parse := self parseCommand: cmd.
+            action := parse first. target := parse second.
+            block := commandMap at: action ifAbsent: [ nil ].
+            block ifNotNil: [
+                block numArgs = 0 ifTrue: [ block value ] ifFalse: [ block value: target ].
+            ] ifNil: [ 
+                (action isEmpty) ifFalse: [
+                    Transcript show: 'Unknown command. Type "help" for list.'; cr 
+                ].
+            ].
+        ] ifNotNil: [
+            self handleCombatCommand: (self normalize: cmd) fullCmd: (self normalize: cmd).
+        ].
+    ]
 
     " Handles user commands for normal gameplay & combat "
     readCommand [
