@@ -73,6 +73,7 @@ Entity subclass: Player [
         ^mod
     ]
     
+    " Roll checking used for different actions in the game (ex. unlocking prison) & their results (success/failure). "
     rollCheck: aStatName against: manualDC [
         | roll modifier total |
         roll := DiceRoller current d20.

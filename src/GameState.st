@@ -12,6 +12,7 @@ Object subclass: GameState [
         ^currentInstance
     ]
 
+    " Different flags for managing certain aspects of the game (ending description, final boss spawn, entry to rooms, etc.) "
     initFlags [
         barrierOpen := false.
         prisonOpen := false.
@@ -21,6 +22,7 @@ Object subclass: GameState [
         secretTunnelOpen := false.
     ]
 
+    " Getters/setters for the flags "
     barrierOpen [ ^barrierOpen ]
     barrierOpen: aBoolean [ barrierOpen := aBoolean ]
 

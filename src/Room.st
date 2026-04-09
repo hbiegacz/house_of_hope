@@ -17,6 +17,7 @@ Object subclass: Room [
         enemies := OrderedCollection new.
     ]
 
+    "Accessors"
     name [ ^name ]
     name: aString [ name := aString ]
 
@@ -51,6 +52,7 @@ Object subclass: Room [
         ^items detect: [ :item | item name sameAs: aString ] ifNone: [ nil ]
     ]
 
+    " Describes rooms, their NPCs and items. Handles special Prison descriptions (before/after freeing Hope) "
     describe [
         Transcript cr; show: 'Current position: ', name; cr.
         Transcript show: '--- LOCATION DESCRIPTION ---'; cr.

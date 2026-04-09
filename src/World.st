@@ -15,7 +15,8 @@ Object subclass: World [
         ^currentInstance
     ]
     
-    initWorld [
+    " Creates rooms, sets up connections between them, places items, NPCs and Enemies" 
+    initWorld [  
         rooms := Dictionary new.
         self setupMap.
     ]
@@ -26,6 +27,7 @@ Object subclass: World [
     currentRoom [ ^currentRoom ]
     currentRoom: aRoom [ currentRoom := aRoom ]
     
+
     setupMap [
         self setupRooms.
         self setupItems.
@@ -72,7 +74,6 @@ Object subclass: World [
         kitchen addItem: ((Item name: 'Rusty Key' description: 'A heavy iron key.')
             hint: 'Unlocks the Secret Tunnel between Vault and Garden.').
     ]
-
     setupNpcsAndEnemies [
         | garden servant sphinx collector |
         garden := rooms at: 'Garden'.
@@ -124,6 +125,8 @@ Object subclass: World [
         Transcript show: '                 [    Prison    ]'; cr; cr.
     ]
 
+    " (if possible) moves the player to the next room. Updates current and previous room variables. "
+    " Handles special room actions (unlocking secret tunnel/prison) or conditions (incantation in inventory for vault)."
     moveTo: aDirection [
         | nextRoom |
         nextRoom := currentRoom getExit: aDirection.
@@ -195,6 +198,7 @@ Object subclass: World [
         ^true
     ]
     
+    " If player decides to flee, they are moved back to the previous room they were "
     fleeBack [
         previousRoom ifNotNil: [
             currentRoom := previousRoom.
@@ -207,6 +211,7 @@ Object subclass: World [
         ^false
     ]
     
+    " display map & room description "
     look [
         self printMap.
         currentRoom describe.
