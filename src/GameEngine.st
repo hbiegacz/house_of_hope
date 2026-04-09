@@ -20,6 +20,8 @@ Responsibilities:
 Object subclass: GameEngine [
     | isGameOver player world activeEnemy introductionText instructionsText combatTurn commandMap |
 
+    " --- INITIALIZATION & CORE LOOP --- "
+
     GameEngine class >> new [
         | g |
         g := super new.
@@ -27,6 +29,7 @@ Object subclass: GameEngine [
         ^g
     ]
 
+    " Initializes class variables (command map, player, world, game instructions) "
     initGame [
         isGameOver := false.
         
@@ -56,9 +59,9 @@ Object subclass: GameEngine [
             '  attack          - standard physical attack (Strength)'
             '  sneak           - escape quietly on Turn 1 (Dexterity, DC 14)'
             '  flee            - run away mid-fight from Turn 2 (Dexterity, DC 17)'
-            '  drink_potion    - heal 10 HP'
+            '  drink_potion    - heal 10 HP '
             ''
-        ).
+         ).
 
         player := Player new.
         world := World current.
@@ -67,6 +70,43 @@ Object subclass: GameEngine [
         self setupCommandMap.
     ]
 
+    " Main game entry point "
+    run [
+        | cmd parse action target block |
+        self characterCreation.
+        isGameOver ifTrue: [ ^self ].
+        
+        self recruitment.
+        isGameOver ifTrue: [ ^self ].
+
+        self printInstructions.
+        world look.
+
+        [ isGameOver ] whileFalse: [
+            cmd := self readCommand.
+            isGameOver ifFalse: [
+                activeEnemy ifNil: [
+                    parse := self parseCommand: cmd.
+                    action := parse first. target := parse second.
+                    block := commandMap at: action ifAbsent: [ nil ].
+                    block ifNotNil: [
+                        block numArgs = 0 ifTrue: [ block value ] ifFalse: [ block value: target ].
+                    ] ifNil: [ 
+                        (action isEmpty) ifFalse: [
+                            Transcript show: 'Unknown command. Type "help" for list.'; cr 
+                        ].
+                    ].
+                ] ifNotNil: [
+                    self handleCombatCommand: (self normalize: cmd) fullCmd: (self normalize: cmd).
+                ]
+            ]
+        ].
+        Transcript cr; show: 'Thanks for playing!'; cr.
+    ]
+
+    " --- SETUP & CONFIGURATION --- "
+
+    " Hash map containing the actions necessary to perform for a specific user command "
     setupCommandMap [
         commandMap := Dictionary new.
         commandMap at: 'quit' put: [ isGameOver := true ].
@@ -82,39 +122,7 @@ Object subclass: GameEngine [
         commandMap at: 'talk' put: [ :target | self handleTalk: target ].
     ]
 
-    "Print strings from array in separate lines."
-    printLines: anArray [
-        anArray do: [ :string | Transcript show: string; cr ]
-    ]
-
-    printIntroduction [
-       self printLines: introductionText.
-    ]
-
-    printInstructions [
-        Transcript cr.
-        self printLines: instructionsText.
-    ]
-
-    readCommand [
-        | line prompt |
-        activeEnemy ifNotNil: [ Transcript cr; show: '--- TURN ', combatTurn printString, ' ---'; cr ].
-        activeEnemy ifNil: [ 
-            prompt := '> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) '.
-        ] ifNotNil: [ 
-            (combatTurn = 1) ifTrue: [
-                prompt := 'Choose: attack | sneak | drink_potion | help. [COMBAT T1] > '.
-            ] ifFalse: [
-                prompt := 'Choose: attack | flee | drink_potion | help. [COMBAT T', combatTurn printString, '] > '.
-            ].
-        ].
-        Transcript show: prompt.
-        line := FileStream stdin nextLine.
-        line ifNil: [ isGameOver := true. ^'quit' ].
-        ^ line
-    ]
-
-    "Character Creation"
+    " Character Creation (initializes stats and stat improvement) "
     characterCreation [
         | points choice mapping |
         points := 5.
@@ -156,7 +164,7 @@ Object subclass: GameEngine [
         Transcript show: '*** Your attributes are forged! ***'; cr; cr.
     ]
 
-    "Recruitment"
+    " Recruitment of companions "
     recruitment [
         | count choice comps |
         count := 3.
@@ -197,147 +205,95 @@ Object subclass: GameEngine [
         Transcript show: '*** Your party is complete and ready for the House of Hope! ***'; cr; cr.
     ]
 
-    "Combat Logic"
-    enterCombat: aRoom [
-        aRoom enemies isEmpty ifFalse: [
-            activeEnemy := aRoom enemies asArray first.
-            combatTurn := 1.
-            Transcript cr; show: '!!! WARNING !!! (Roll: d20 vs AC)'; cr.
-            Transcript show: 'A wild ', activeEnemy name, ' appears in the ', aRoom name asLowercase, '!'; cr; cr.
-            Transcript show: 'You are fighting: ', activeEnemy name; cr.
-            Transcript show: activeEnemy description; cr.
-        ]
-    ]
+    " --- COMMAND HANDLING & PARSING --- "
 
-    handleEnemyTurn [
-        | roll ac dmg enemyHeader |
-        activeEnemy ifNil: [ ^self ].
-        
-        roll := DiceRoller current d20.
-        ac := 12 + (player calculateModifier: 'dexterity').
-        
-        enemyHeader := '--- ', activeEnemy name asUppercase, ' ATTACKS ---'.
-        Transcript cr; show: enemyHeader; cr.
-        
-        (roll = 20) ifTrue: [ Transcript show: 'CRITICAL HIT!'; cr. ].
-
-        (roll >= ac or: [ roll = 20 ]) ifTrue: [
-            | baseDmg bonus |
-            (roll = 20) ifTrue: [ 
-                baseDmg := (DiceRoller current roll: 3 to: 7) * 2.
+    " Handles user commands for normal gameplay & combat "
+    readCommand [
+        | line prompt |
+        activeEnemy ifNotNil: [ Transcript cr; show: '--- TURN ', combatTurn printString, ' ---'; cr ].
+        activeEnemy ifNil: [ 
+            prompt := '> (look, go [dir], search, examine [item], take [item], use [item], stats, help, quit) '.
+        ] ifNotNil: [ 
+            (combatTurn = 1) ifTrue: [ 
+                " Only during the first turn can you try to sneak. "
+                prompt := 'Choose: attack | sneak | drink_potion | help. [COMBAT T1] > '.
             ] ifFalse: [
-                baseDmg := DiceRoller current roll: 3 to: 7.
+                prompt := 'Choose: attack | flee | drink_potion | help. [COMBAT T', combatTurn printString, '] > '.
             ].
-            bonus := player calculateModifier: 'endurance'.
-            dmg := (baseDmg - bonus) max: 1.
-            
-            player takeDamage: dmg.
-            Transcript show: 'Took ', dmg printString, ' dmg (Endurance saved: ', bonus printString, '). HP: ', player hp printString; cr.
-            (player isAlive) ifFalse: [
-                Transcript show: 'YOU DIED... The House of Hope has claimed your soul.'; cr.
-                isGameOver := true.
-            ]
-        ] ifFalse: [ Transcript show: 'You avoided the attack!'; cr ].
-
-        (GameState current hopeFree) ifTrue: [
-            dmg := (DiceRoller current roll: 3 to: 8).
-            player heal: dmg.
-            Transcript cr; show: 'Hope prays for you! Divine light heals you for ', dmg printString, ' HP. ', player hpDisplay; cr.
         ].
+        Transcript show: prompt.
+        line := FileStream stdin nextLine.
+        line ifNil: [ isGameOver := true. ^'quit' ].
+        ^ line
     ]
 
-    handleSneak [
-        | result |
-        Transcript show: 'You try to slip away before the fight starts...'; cr.
-        result := player rollCheck: 'dexterity' against: 14.
-        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
-            Transcript show: 'Success! You escaped the ', activeEnemy name; cr.
-            activeEnemy := nil.
-            world fleeBack.
-            ^true
-        ].
-        Transcript show: 'The enemy heard you! Combat begins!'; cr.
-        self handleEnemyTurn.
-        combatTurn := combatTurn + 1.
-        ^true
-    ]
-
-    handleAttack [
-        | result damage |
-        activeEnemy ifNil: [ ^false ].
-        result := player rollCheck: 'strength' against: activeEnemy armorClass.
+    " Parses a command string into action and target "
+    parseCommand: aString [
+        | cmd parts action target openIdx closeIdx |
+        "Normalize input: lowercase, trim, remove trailing dot"
+        cmd := self normalize: aString.
+        parts := cmd subStrings.
+        parts isEmpty ifTrue: [ ^#('' nil) ].
         
-        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
-            (result = #criticalSuccess) ifTrue: [ 
-                damage := (DiceRoller current roll: 4 to: 11) * 2.
-            ] ifFalse: [
-                damage := DiceRoller current roll: 4 to: 11.
-            ].
-            activeEnemy takeDamage: damage.
-            
-            (result = #criticalSuccess) ifTrue: [ 
-                Transcript cr; show: '*** CRITICAL HIT! *** ', damage printString, ' dmg! (Enemy HP: ', activeEnemy hp printString, ')'; cr.
-            ] ifFalse: [
-                Transcript cr; show: 'HIT! ', damage printString, ' dmg. (Enemy HP: ', activeEnemy hp printString, ')'; cr.
-            ].
-            (activeEnemy isAlive) ifFalse: [
-                (activeEnemy name sameAs: 'Raphael') ifTrue: [
-                    Transcript cr.
-                    Transcript show: 'Raphael falls to his knees, his golden armor shattered.'; cr.
-                    Transcript show: 'Hope appears by your side, her light blinding the devil.'; cr.
-                    Transcript show: 'Hope: "Begone, Raphael! This house is no longer your prison!"'; cr.
-                    Transcript show: 'Together, you cast him out into the void.'; cr.
-                    Transcript show: '*** YOU HAVE WON THE GAME ***'; cr.
-                    isGameOver := true.
-                ] ifFalse: [
-                    Transcript show: 'ENEMY DEFEATED!'; cr.
-                    world currentRoom enemies remove: activeEnemy.
+        (cmd includes: $() ifTrue: [
+            openIdx := cmd indexOf: $(.
+            closeIdx := cmd indexOf: $).
+            closeIdx = 0 ifTrue: [ closeIdx := cmd size + 1 ].
+            action := (cmd copyFrom: 1 to: (openIdx - 1)) trim.
+            target := (cmd copyFrom: (openIdx + 1) to: (closeIdx - 1)) trim.
+            ^Array with: action with: target
+        ] ifFalse: [
+            action := parts first.
+            parts size > 1 ifTrue: [
+                "Join all remaining parts into a single target string with single spaces"
+                target := (parts copyFrom: 2 to: parts size) inject: '' into: [ :acc :each | 
+                    acc isEmpty ifTrue: [ each ] ifFalse: [ acc, ' ', each ]
                 ].
-                activeEnemy := nil.
-                ^true
+            ^Array with: action with: target
             ].
-        ] ifFalse: [ Transcript show: 'You missed!'; cr ].
-        
-        self handleEnemyTurn.
-        combatTurn := combatTurn + 1.
-        ^true
-    ]
-
-    handleCombatUsePotion [
-        | potion |
-        potion := player findItemNamed: 'Potion'.
-        potion ifNil: [ Transcript show: 'No potions left!'; cr. ^false ].
-        
-        player heal: 10.
-        player inventory remove: potion.
-        Transcript show: 'You drink a potion... +10 HP ', player hpDisplay; cr.
-        
-        self handleEnemyTurn.
-        combatTurn := combatTurn + 1.
-        ^true
-    ]
-
-    handleFlee [
-        | result |
-        Transcript show: 'You desperately try to break away from the fight!'; cr.
-        result := player rollCheck: 'dexterity' against: 17.
-        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
-            Transcript show: 'You managed to run away!'; cr.
-            activeEnemy := nil.
-            world fleeBack.
-            ^true
         ].
-        Transcript show: 'The enemy blocks your path! You are stuck!'; cr.
-        self handleEnemyTurn.
-        combatTurn := combatTurn + 1.
-        ^true
+        ^Array with: action with: nil
     ]
 
-    handleInventory [
-        Transcript cr; show: '--- YOUR INVENTORY ---'; cr.
-        Transcript show: 'Items:'; cr.
-        player inventory do: [ :i | Transcript show: '* ', i name; cr ].
-        Transcript cr; show: 'Commands: use [item], examine [item], drop [item].'; cr.
+    " Helper to clean up input string "
+    normalize: aString [
+        | clean |
+        aString ifNil: [ isGameOver := true. ^'' ].
+        clean := aString asLowercase trim.
+        (clean endsWith: '.') ifTrue: [ clean := clean copyFrom: 1 to: (clean size - 1) ].
+        ^clean
+    ]
+
+    " Specifically handles commands during combat "
+    handleCombatCommand: action fullCmd: cmd [
+        (action = 'quit' or: [ cmd sameAs: 'quit' ]) ifTrue: [ isGameOver := true. activeEnemy := nil. ^true ].
+        ((action = 'attack') or: [ cmd sameAs: 'attack' ]) ifTrue: [ self handleAttack. ^true ].
+        
+        ((action = 'sneak') or: [ cmd sameAs: 'sneak' ]) ifTrue: [ 
+            (combatTurn = 1) ifTrue: [ self handleSneak. ^true ] 
+            ifFalse: [ Transcript show: 'Too late to sneak! Use "flee".'; cr. ^true ].
+        ].
+        
+        ((action = 'flee') or: [ cmd sameAs: 'flee' ]) ifTrue: [ 
+            (combatTurn > 1) ifTrue: [ self handleFlee. ^true ]
+            ifFalse: [ Transcript show: 'Use "sneak" in the first round.'; cr. ^true ].
+        ].
+
+        ((action = 'help') or: [ cmd sameAs: 'help' ]) ifTrue: [ self printInstructions. ^true ].
+        (#('drink_potion' 'drinkpotion' 'use potion' 'drink potion') anySatisfy: [ :p | cmd sameAs: p ]) ifTrue: [ self handleCombatUsePotion. ^true ].
+        ^false
+    ]
+
+    " --- EXPLORATION & WORLD INTERACTION --- "
+
+    handleGo: direction [
+        direction ifNil: [ Transcript show: 'Go where? (Examples: go north, go south)'; cr. ^false ].
+        (world moveTo: direction) ifTrue: [
+            (world currentRoom name = 'Foyer' and: [ GameState current contractTaken ]) ifTrue: [
+                world currentRoom enemies add: (Enemy name: 'Raphael' hp: 100 maxHp: 100 ac: 16 dc: 15 description: 'The lord of this house.').
+            ].
+            self enterCombat: world currentRoom.
+        ].
     ]
 
     handleSearch [
@@ -350,16 +306,6 @@ Object subclass: GameEngine [
             items do: [ :i | Transcript show: '- ', i name, ': ', i description; cr ].
         ].
         ^true
-    ]
-
-    handleGo: direction [
-        direction ifNil: [ Transcript show: 'Go where? (Examples: go north, go south)'; cr. ^false ].
-        (world moveTo: direction) ifTrue: [
-            (world currentRoom name = 'Foyer' and: [ GameState current contractTaken ]) ifTrue: [
-                world currentRoom enemies add: (Enemy name: 'Raphael' hp: 100 maxHp: 100 ac: 16 dc: 15 description: 'The lord of this house.').
-            ].
-            self enterCombat: world currentRoom.
-        ].
     ]
 
     handleTake: itemName [
@@ -491,91 +437,170 @@ Object subclass: GameEngine [
         ^true
     ]
 
-    normalize: aString [
-        | clean |
-        aString ifNil: [ isGameOver := true. ^'' ].
-        clean := aString asLowercase trim.
-        (clean endsWith: '.') ifTrue: [ clean := clean copyFrom: 1 to: (clean size - 1) ].
-        ^clean
+    handleInventory [
+        Transcript cr; show: '--- YOUR INVENTORY ---'; cr.
+        Transcript show: 'Items:'; cr.
+        player inventory do: [ :i | Transcript show: '* ', i name; cr ].
+        Transcript cr; show: 'Commands: use [item], examine [item], drop [item].'; cr.
     ]
 
-    parseCommand: aString [
-        | cmd parts action target openIdx closeIdx |
-        "Normalize input: lowercase, trim, remove trailing dot"
-        cmd := self normalize: aString.
-        parts := cmd subStrings.
-        parts isEmpty ifTrue: [ ^#('' nil) ].
+    " --- COMBAT LOGIC --- "
+
+    " Initializes combat in a room "
+    enterCombat: aRoom [
+        aRoom enemies isEmpty ifFalse: [
+            activeEnemy := aRoom enemies asArray first.
+            combatTurn := 1.
+            Transcript cr; show: '!!! WARNING !!! (Roll: d20 vs AC)'; cr.
+            Transcript show: 'A wild ', activeEnemy name, ' appears in the ', aRoom name asLowercase, '!'; cr; cr.
+            Transcript show: 'You are fighting: ', activeEnemy name; cr.
+            Transcript show: activeEnemy description; cr.
+        ]
+    ]
+
+    " Rolls the dice & displays enemy damage "
+    handleEnemyTurn [
+        | roll ac dmg enemyHeader |
+        activeEnemy ifNil: [ ^self ].
         
-        (cmd includes: $() ifTrue: [
-            openIdx := cmd indexOf: $(.
-            closeIdx := cmd indexOf: $).
-            closeIdx = 0 ifTrue: [ closeIdx := cmd size + 1 ].
-            action := (cmd copyFrom: 1 to: (openIdx - 1)) trim.
-            target := (cmd copyFrom: (openIdx + 1) to: (closeIdx - 1)) trim.
-            ^Array with: action with: target
-        ] ifFalse: [
-            action := parts first.
-            parts size > 1 ifTrue: [
-                "Join all remaining parts into a single target string with single spaces"
-                target := (parts copyFrom: 2 to: parts size) inject: '' into: [ :acc :each | 
-                    acc isEmpty ifTrue: [ each ] ifFalse: [ acc, ' ', each ]
-                ].
-            ^Array with: action with: target
+        roll := DiceRoller current d20.
+        ac := 12 + (player calculateModifier: 'dexterity').
+        
+        enemyHeader := '--- ', activeEnemy name asUppercase, ' ATTACKS ---'.
+        Transcript cr; show: enemyHeader; cr.
+        
+        (roll = 20) ifTrue: [ Transcript show: 'CRITICAL HIT!'; cr. ].
+
+        (roll >= ac or: [ roll = 20 ]) ifTrue: [
+            | baseDmg bonus |
+            (roll = 20) ifTrue: [ 
+                baseDmg := (DiceRoller current roll: 3 to: 7) * 2.
+            ] ifFalse: [
+                baseDmg := DiceRoller current roll: 3 to: 7.
             ].
-        ].
-        ^Array with: action with: nil
-    ]
-
-    handleCombatCommand: action fullCmd: cmd [
-        (action = 'quit' or: [ cmd sameAs: 'quit' ]) ifTrue: [ isGameOver := true. activeEnemy := nil. ^true ].
-        ((action = 'attack') or: [ cmd sameAs: 'attack' ]) ifTrue: [ self handleAttack. ^true ].
-        
-        ((action = 'sneak') or: [ cmd sameAs: 'sneak' ]) ifTrue: [ 
-            (combatTurn = 1) ifTrue: [ self handleSneak. ^true ] 
-            ifFalse: [ Transcript show: 'Too late to sneak! Use "flee".'; cr. ^true ].
-        ].
-        
-        ((action = 'flee') or: [ cmd sameAs: 'flee' ]) ifTrue: [ 
-            (combatTurn > 1) ifTrue: [ self handleFlee. ^true ]
-            ifFalse: [ Transcript show: 'Use "sneak" in the first round.'; cr. ^true ].
-        ].
-
-        ((action = 'help') or: [ cmd sameAs: 'help' ]) ifTrue: [ self printInstructions. ^true ].
-        (#('drink_potion' 'drinkpotion' 'use potion' 'drink potion') anySatisfy: [ :p | cmd sameAs: p ]) ifTrue: [ self handleCombatUsePotion. ^true ].
-        ^false
-    ]
-
-    run [
-        | cmd parse action target block |
-        self characterCreation.
-        isGameOver ifTrue: [ ^self ].
-        
-        self recruitment.
-        isGameOver ifTrue: [ ^self ].
-
-        self printInstructions.
-        world look.
-
-        [ isGameOver ] whileFalse: [
-            cmd := self readCommand.
-            isGameOver ifFalse: [
-                activeEnemy ifNil: [
-                    parse := self parseCommand: cmd.
-                    action := parse first. target := parse second.
-                    block := commandMap at: action ifAbsent: [ nil ].
-                    block ifNotNil: [
-                        block numArgs = 0 ifTrue: [ block value ] ifFalse: [ block value: target ].
-                    ] ifNil: [ 
-                        (action isEmpty) ifFalse: [
-                            Transcript show: 'Unknown command. Type "help" for list.'; cr 
-                        ].
-                    ].
-                ] ifNotNil: [
-                    self handleCombatCommand: (self normalize: cmd) fullCmd: (self normalize: cmd).
-                ]
+            bonus := player calculateModifier: 'endurance'.
+            dmg := (baseDmg - bonus) max: 1.
+            
+            player takeDamage: dmg.
+            Transcript show: 'Took ', dmg printString, ' dmg (Endurance saved: ', bonus printString, '). HP: ', player hp printString; cr.
+            (player isAlive) ifFalse: [
+                Transcript show: 'YOU DIED... The House of Hope has claimed your soul.'; cr.
+                isGameOver := true.
             ]
+        ] ifFalse: [ Transcript show: 'You avoided the attack!'; cr ].
+
+        (GameState current hopeFree) ifTrue: [
+            dmg := (DiceRoller current roll: 3 to: 8).
+            player heal: dmg.
+            Transcript cr; show: 'Hope prays for you! Divine light heals you for ', dmg printString, ' HP. ', player hpDisplay; cr.
         ].
-        Transcript cr; show: 'Thanks for playing!'; cr.
+    ]
+
+    " Handles attacking the enemy. Checks if final boss defeated. "
+    handleAttack [
+        | result damage |
+        activeEnemy ifNil: [ ^false ].
+        result := player rollCheck: 'strength' against: activeEnemy armorClass.
+        
+        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
+            (result = #criticalSuccess) ifTrue: [ 
+                damage := (DiceRoller current roll: 4 to: 11) * 2.
+            ] ifFalse: [
+                damage := DiceRoller current roll: 4 to: 11.
+            ].
+            activeEnemy takeDamage: damage.
+            
+            (result = #criticalSuccess) ifTrue: [ 
+                Transcript cr; show: '*** CRITICAL HIT! *** ', damage printString, ' dmg! (Enemy HP: ', activeEnemy hp printString, ')'; cr.
+            ] ifFalse: [
+                Transcript cr; show: 'HIT! ', damage printString, ' dmg. (Enemy HP: ', activeEnemy hp printString, ')'; cr.
+            ].
+            (activeEnemy isAlive) ifFalse: [
+                (activeEnemy name sameAs: 'Raphael') ifTrue: [
+                    Transcript cr.
+                    Transcript show: 'Raphael falls to his knees, his golden armor shattered.'; cr.
+                    Transcript show: 'Hope appears by your side, her light blinding the devil.'; cr.
+                    Transcript show: 'Hope: "Begone, Raphael! This house is no longer your prison!"'; cr.
+                    Transcript show: 'Together, you cast him out into the void.'; cr.
+                    Transcript show: '*** YOU HAVE WON THE GAME ***'; cr.
+                    isGameOver := true.
+                ] ifFalse: [
+                    Transcript show: 'ENEMY DEFEATED!'; cr.
+                    world currentRoom enemies remove: activeEnemy.
+                ].
+                activeEnemy := nil.
+                ^true
+            ].
+        ] ifFalse: [ Transcript show: 'You missed!'; cr ].
+        
+        self handleEnemyTurn.
+        combatTurn := combatTurn + 1.
+        ^true
+    ]
+
+    " Handles sneaking away on the first turn of combat "
+    handleSneak [
+        | result |
+        Transcript show: 'You try to slip away before the fight starts...'; cr.
+        result := player rollCheck: 'dexterity' against: 14.
+        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
+            Transcript show: 'Success! You escaped the ', activeEnemy name; cr.
+            activeEnemy := nil.
+            world fleeBack.
+            ^true
+        ].
+        Transcript show: 'The enemy heard you! Combat begins!'; cr.
+        self handleEnemyTurn.
+        combatTurn := combatTurn + 1.
+        ^true
+    ]
+
+    " Handles fleeing mid-combat "
+    handleFlee [
+        | result |
+        Transcript show: 'You desperately try to break away from the fight!'; cr.
+        result := player rollCheck: 'dexterity' against: 17.
+        (result = #success or: [ result = #criticalSuccess ]) ifTrue: [
+            Transcript show: 'You managed to run away!'; cr.
+            activeEnemy := nil.
+            world fleeBack.
+            ^true
+        ].
+        Transcript show: 'The enemy blocks your path! You are stuck!'; cr.
+        self handleEnemyTurn.
+        combatTurn := combatTurn + 1.
+        ^true
+    ]
+
+    " Handles using a potion during combat "
+    handleCombatUsePotion [
+        | potion |
+        potion := player findItemNamed: 'Potion'.
+        potion ifNil: [ Transcript show: 'No potions left!'; cr. ^false ].
+        
+        player heal: 10.
+        player inventory remove: potion.
+        Transcript show: 'You drink a potion... +10 HP ', player hpDisplay; cr.
+        
+        self handleEnemyTurn.
+        combatTurn := combatTurn + 1.
+        ^true
+    ]
+
+    " --- UI & UTILITIES --- "
+
+    printIntroduction [
+       self printLines: introductionText.
+    ]
+
+    printInstructions [
+        Transcript cr.
+        self printLines: instructionsText.
+    ]
+
+    " Print strings from array in separate lines "
+    printLines: anArray [
+        anArray do: [ :string | Transcript show: string; cr ]
     ]
 ]
 
